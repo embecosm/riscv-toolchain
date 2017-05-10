@@ -1,13 +1,14 @@
 RISC-V Toolchain build
 ======================
 
-Repositories checked out alongside the toolchain repo should be:
+Repositories can be checked out alongside the toolchain as follows:
 
-- binutils from git://sourceware.org/git/binutils-gdb.git
-- gdb from git@github.com:riscv/riscv-binutils-gdb
-- gcc from git@github.com:gcc-mirror/gcc
-- newlib from https://github.com/riscv/riscv-newlib.git
-- dejagnu from git@github.com:riscv/riscv-dejagnu.git
+git clone git://sourceware.org/git/binutils-gdb.git binutils
+git clone ssh://git@github.com/riscv/riscv-binutils-gdb gdb
+git clone ssh://git@github.com/gcc-mirror/gcc gcc
+git clone ssh://git@github.com/riscv/riscv-newlib.git newlib
+git clone ssh://git@github.com/riscv/riscv-dejagnu.git dejagnu
+
 
 Building the toolchain
 ----------------------
