@@ -2,10 +2,10 @@
 
 # Clone script for the RISC-V tool chain
 
-# Copyright (C) 2009, 2013, 2014, 2015, 2016 Embecosm Limited
+# Copyright (C) 2009, 2013, 2014, 2015, 2016, 2017 Embecosm Limited
 # Contributor Jeremy Bennett <jeremy.bennett@embecosm.com>
 
-# This file is part of the Embecosm LLVM build system.
+# This file is part of the Embecosm GNU toolchain build system for RISC-V.
 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -21,12 +21,17 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 # This file is part of the Embecosm LLVM build system for AAP.
 
-#		      SCRIPT TO CLONE AN LLVM TOOL CHAIN
-#		      ==================================
+#		    SCRIPT TO CLONE THE RISC-V TOOL CHAIN
+#		    =====================================
 
 # Invocation Syntax
 
 #     clone-all.sh [-dev]
+
+# Argument meanings:
+
+#     -dev  Clone Embecosm repos as SSH, rather than HTTPS, allowing write
+#           access.
 
 
 # Set the top level directory.
@@ -40,8 +45,9 @@ else
     BASE_URL=https://github.com/embecosm
 fi
 
-# Upstream repo name
+# Upstream repo names
 US=github
+EM=embecosm
 
 cd ${topdir}
 git clone -o ${US} git://sourceware.org/git/binutils-gdb.git binutils
@@ -49,3 +55,4 @@ git clone -o ${US} ssh://git@github.com/riscv/riscv-binutils-gdb gdb
 git clone -o ${US} ssh://git@github.com/gcc-mirror/gcc gcc
 git clone -o ${US} ssh://git@github.com/riscv/riscv-newlib.git newlib
 git clone -o ${US} ssh://git@github.com/riscv/riscv-dejagnu.git dejagnu
+git clone -o ${EM} ${BASE_URL}/riscv-gdbserver.git gdbserver
