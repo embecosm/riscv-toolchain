@@ -140,6 +140,9 @@ GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage-1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
 DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
+FESVR_BUILD_DIR=${BUILD_DIR}/riscv-fesvr
+PK_BUILD_DIR=${BUILD_DIR}/riscv-pk
+SPIKE_BUILD_DIR=${BUILD_DIR}/riscv-isa-sim
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
 INSTALL_SYSCONF_DIR=${INSTALL_DIR}/etc
@@ -565,6 +568,85 @@ fi
 if ! run_command make install
 then
     error "Failed to install DejaGNU"
+fi
+
+job_done
+
+
+# ====================================================================
+#                Build and Install RISC-V Front-End Server (fesvr)
+# ====================================================================
+
+job_start "Building fesvr (RISC-V Front-End Server used by SPIKE)"
+
+mkdir_and_enter ${FESVR_BUILD_DIR}
+
+if ! run_command ${TOP}/riscv-fesvr/configure \
+           --prefix=${INSTALL_PREFIX_DIR}
+then
+    error "Failed to configure fesvr"
+fi
+
+if ! run_command make install
+then
+    error "Failed to build and install fesvr"
+fi
+
+job_done
+
+
+# ====================================================================
+#                Build and Install RISC-V Proxy Kernel (pk)
+# ====================================================================
+
+job_start "Building pk (RISC-V Proxy Kernel used by SPIKE)"
+
+mkdir_and_enter ${PK_BUILD_DIR}
+
+if ! run_command ${TOP}/riscv-pk/configure \
+           --prefix=${INSTALL_PREFIX_DIR} \
+           --host=${TARGET_TRIPLET}
+then
+    error "Failed to configure pk"
+fi
+
+if ! run_command make
+then
+    error "Failed to build pk"
+fi
+
+if ! run_command make install
+then
+    error "Failed to install pk"
+fi
+
+job_done
+
+
+# ====================================================================
+#                Build and Install RISC-V ISA Simulator (SPIKE)
+# ====================================================================
+
+job_start "Building SPIKE (RISC-V ISA Simulator)"
+
+mkdir_and_enter ${SPIKE_BUILD_DIR}
+
+if ! run_command ${TOP}/riscv-isa-sim/configure \
+           --prefix=${INSTALL_PREFIX_DIR} \
+           --with-fesvr=${INSTALL_PREFIX_DIR} \
+           --with-isa=${WITH_ARCH}
+then
+    error "Failed to configure SPIKE"
+fi
+
+if ! run_command make
+then
+    error "Failed to build SPIKE"
+fi
+
+if ! run_command make install
+then
+    error "Failed to install SPIKE"
 fi
 
 job_done

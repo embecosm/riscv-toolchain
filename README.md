@@ -1,19 +1,8 @@
 RISC-V Toolchain build
 ======================
 
-Repositories can be checked out alongside the toolchain as follows:
-
-```
-git clone git://sourceware.org/git/binutils-gdb.git binutils
-git clone ssh://git@github.com/riscv/riscv-binutils-gdb gdb
-git clone ssh://git@github.com/gcc-mirror/gcc gcc
-git clone ssh://git@github.com/riscv/riscv-newlib.git newlib
-git clone ssh://git@github.com/riscv/riscv-dejagnu.git dejagnu
-git clone https://github.com/embecosm/riscv-gdbserver.git gdbserver
-```
-
-or use the `clone-all.sh` script in this directory. To clone for read only
-access use:
+Use the `clone-all.sh` script in this directory to check out various
+repos alongside this one. To clone for read only access use:
 ```
 ./clone-all.sh
 ```
@@ -25,6 +14,9 @@ permission granted).
 
 Building the toolchain
 ----------------------
+
+Note that you require the device-tree-compiler package to build riscv-isa-sim
+(SPIKE).
 
 Execute:
 
