@@ -2,7 +2,7 @@ RISC-V Toolchain build
 ======================
 
 Use the `clone-all.sh` script in this directory to check out various
-repos alongside this one. To clone for read only access use:
+repositories alongside this one. To clone for read only access use:
 ```
 ./clone-all.sh
 ```
@@ -12,7 +12,7 @@ permission granted).
 ./clone-all.sh -dev
 ```
 
-Please note: At of May 31st 2017, the GDB repository is in a transitional state
+NOTE: As of May 31st 2017, the GDB repository is in a transitional state
 and doesn't build, so you will need to roll back to a working commit as follows:
 ```
 cd ../gdb
@@ -22,10 +22,10 @@ git reset --hard 1135e18e7dc6ce046e423ad1d8ad3897ba9b562a
 Building the toolchain
 ----------------------
 
-Note that you require the device-tree-compiler package to build riscv-isa-sim
+NOTE: The device-tree-compiler package is required to build riscv-isa-sim
 (SPIKE).
 
-Execute:
+To build everything (binutils, gdb, gcc, SPIKE, etc.):
 
 ```
 ./build-all.sh
