@@ -1,0 +1,43 @@
+# RISC-V specific site.exp for SPIKE
+
+# Copyright (C) 2017 Embecosm Limited.
+# Contributor Ian Bolton <ian.bolton@embecosm.com>
+
+# This file is part of the Embecosm GNU build system for RISC-V.
+
+# This file is distributed under the University of Illinois Open Source
+# License. See COPYING for details.
+
+#------------------------------------------------------------------------------
+
+# Explicitly set the target.
+set target_triplet riscv32-unknown-elf
+set target_alias riscv32
+
+# Make sure we look in the right place for the board description files. Add
+# our local boards directories
+if ![info exists boards_dir] {
+    lappend boards_dir "[file dirname $env(DEJAGNU)]/dejagnu"
+    lappend boards_dir "[file dirname $env(DEJAGNU)]/dejagnu/baseboards"
+} else {
+    set boards_dir "[file dirname $env(DEJAGNU)]/dejagnu"
+    lappend boards_dir "[file dirname $env(DEJAGNU)]/dejagnu/baseboards"
+}
+
+# $target_list is set by the --target_board option. If it is not set, then we
+# should use $target_triplet to set a single target board in ${target_list}.
+global target_list
+
+case "$target_triplet" in {
+
+    { "riscv32-*-*" } {
+	if {! [info exists target_list]} {
+	    set target_list { "spike-run" }
+	}
+    }
+
+    default {
+	# Any other triplet is an error.
+	error "Unknown target $target_triplet in site.exp."
+    }
+}

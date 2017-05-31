@@ -1,0 +1,33 @@
+# Board specification for the RISC-V ISA Simulator (SPIKE)
+
+# Copyright (C) 2017 Embecosm Limited.
+# Contributor Ian Bolton <ian.bolton@embecosm.com>
+
+# This file is part of the Embecosm GNU build system for RISC-V.
+
+# This file is distributed under the University of Illinois Open Source
+# License. See COPYING for details.
+
+# This is a list of toolchains that are supported on this board.
+set_board_info target_install  {$target_triplet}
+
+load_generic_config "sim"
+
+# No default multilib options are needed for this board.
+process_multilib_options ""
+
+# The compiler to test. Note this is the installed compiler and should be on
+# the user's PATH.
+set_board_info compiler "riscv32-unknown-elf-gcc"
+set GCC_UNDER_TEST "riscv32-unknown-elf-gcc"
+set GXX_UNDER_TEST "riscv32-unknown-elf-g++"
+
+# The flavors of debug we support
+set DEBUG_TORTURE_OPTIONS {-gdwarf-2}
+
+# Default linker script. Have to do this by using -Wl in ldflags.
+set_board_info ldscript ""
+
+# Invoke spike with its proxy kernel to run each executable
+set_board_info sim "spike pk"
+
