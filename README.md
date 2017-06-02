@@ -1,8 +1,17 @@
-RISC-V Toolchain build
-======================
+Embecosm RISC-V Toolchain
+=========================
 
-Please note: The instructions below are primarily for building and testing riscv32ima.
+This repository consists of scripts and related files for building and testing a
+RISC-V Toolchain. The main differences of this toolchain build from the RISC-V
+Foundation's riscv-tools and riscv-gnu-toolchain builds are:
 
+- This repository uses upstream Binutils and GCC. Once other components are
+  merged upstream (e.g. GDB, Newlib...) are merged upstream, this repository
+  will be updated to use the upstream versions of those components.
+- Only Newlib builds are supported, for bare-metal systems. There is no Linux
+  support at present.
+- The default build is for RV32IMA. However, the architecture and ABI can be
+  modified.
 
 Getting the sources
 -------------------
@@ -37,7 +46,11 @@ To build a 32-bit riscv32ima toolchain (binutils, gdb, gcc, newlib, SPIKE, etc.)
 ./build-all.sh
 ```
 
-Executing the GCC tests 
+To see the options for `build-all.sh`, use `./build-all.sh --help`. These
+include options for setting the architecture and ABI.
+
+
+Executing the GCC tests
 -----------------------
 
 To run using the GDB simulator (the default):
