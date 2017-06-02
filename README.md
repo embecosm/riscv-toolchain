@@ -1,6 +1,12 @@
 RISC-V Toolchain build
 ======================
 
+Please note: The instructions below are primarily for building and testing riscv32ima.
+
+
+Getting the sources
+-------------------
+
 Use the `clone-all.sh` script in this directory to check out various
 repositories alongside this one. To clone for read only access use:
 ```
@@ -25,13 +31,13 @@ Building the toolchain
 NOTE: The device-tree-compiler package is required to build riscv-isa-sim
 (SPIKE).
 
-To build everything (binutils, gdb, gcc, SPIKE, etc.):
+To build a 32-bit riscv32ima toolchain (binutils, gdb, gcc, newlib, SPIKE, etc.):
 
 ```
 ./build-all.sh
 ```
 
-Executing the GCC tests
+Executing the GCC tests 
 -----------------------
 
 To run using the GDB simulator (the default):
