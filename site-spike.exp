@@ -12,7 +12,6 @@
 
 # Explicitly set the target.
 set target_triplet riscv32-unknown-elf
-set target_alias riscv32
 
 # Make sure we look in the right place for the board description files. Add
 # our local boards directories
@@ -32,7 +31,7 @@ case "$target_triplet" in {
 
     { "riscv32-*-*" } {
 	if {! [info exists target_list]} {
-	    set target_list { "spike-run" }
+	    set target_list { "riscv-spike" }
 	}
     }
 

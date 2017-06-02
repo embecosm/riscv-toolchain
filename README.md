@@ -40,8 +40,8 @@ To run using the GDB simulator (the default):
 ./run-tests.sh
 ```
 
-To run with the SPIKE ISA simulator:
+To run with the SPIKE ISA simulator, which should be on your PATH:
 ```
-./run-spikes-tests.sh
+./run-spike-tests.sh
 ```
 

@@ -17,7 +17,7 @@ function enter_dir ()
 
 enter_dir ${GCC_STAGE_2_BUILD_DIR}
 
-make -j 8 check-gcc-c RUNTESTFLAGS="--target-board=spike-run"
+make -j 8 check-gcc-c RUNTESTFLAGS="--target-board=riscv-spike"
 
 echo "--------------------------------------------------------------------"
 echo "RESULTS FILES (which will be overwritten if you run again) ARE HERE:" 
