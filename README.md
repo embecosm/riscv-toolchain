@@ -53,14 +53,14 @@ include options for setting the architecture and ABI.
 Executing the GCC tests
 -----------------------
 
-To run using the GDB simulator (the default):
+To run using the SPIKE ISA simulator:
 
 ```
 ./run-tests.sh
 ```
 
-To run with the SPIKE ISA simulator, which should be on your PATH:
+To run with the GDB simulator:
 ```
-./run-spike-tests.sh
+TARGET_BOARD=riscv-sim ./run-spike-tests.sh
 ```
 
