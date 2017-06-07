@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Check we have verilator and device-tree-compiler before we start
+
+if ! test $(which verilator)
+then
+        echo "ERROR: verilator required for building the GDB Server"
+	exit 1
+fi
+
+if ! test $(which dtc)
+then
+        echo "ERROR: device-tree-compiler (dtc) required to build SPIKE"
+	exit 1
+fi
+
+
 TOOLCHAIN_DIR=$(cd "`dirname \"$0\"`"; pwd)
 TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
@@ -143,6 +158,8 @@ DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
 FESVR_BUILD_DIR=${BUILD_DIR}/riscv-fesvr
 PK_BUILD_DIR=${BUILD_DIR}/riscv-pk
 SPIKE_BUILD_DIR=${BUILD_DIR}/riscv-isa-sim
+PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
+GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
 INSTALL_SYSCONF_DIR=${INSTALL_DIR}/etc
@@ -647,6 +664,64 @@ fi
 if ! run_command make install
 then
     error "Failed to install SPIKE"
+fi
+
+job_done
+
+
+
+# ====================================================================
+#                Verilate PICORV32
+# ====================================================================
+
+job_start "Verilating PICORV32"
+
+mkdir_and_enter ${PICORV32_BUILD_DIR}
+
+if ! run_command cp -r ${TOP}/picorv32/scripts/gdbserver/* ${PICORV32_BUILD_DIR}
+then
+    error "Failed to copy files for PICORV32 build"
+fi
+
+if ! run_command make
+then
+    error "Failed to verilate PICORV32"
+fi
+
+job_done
+
+
+# ====================================================================
+#                Build GDB Server for PICORV32
+# ====================================================================
+
+job_start "Building GDB Server for PICORV32"
+
+cd ${TOP}/gdbserver
+
+if ! run_command autoreconf --install
+then
+    error "Failed to autoreconf for GDB Server"
+fi
+
+mkdir_and_enter ${GDBSERVER_BUILD_DIR}
+
+if ! run_command ${TOP}/gdbserver/configure \
+           --with-verilator-headers=/usr/share/verilator/include \
+           CXXFLAGS="-std=gnu++11 -O3" \
+           VTESTBENCH=${PICORV32_BUILD_DIR}/obj_dir
+then
+    error "Failed to configure GDB Server"
+fi
+
+if ! run_command make
+then
+    error "Failed to build GDB Server"
+fi
+
+if ! run_command cp server/riscv-gdbserver ${INSTALL_DIR}/bin/riscv32-gdbserver
+then
+    error "Failed to install GDB Server"
 fi
 
 job_done

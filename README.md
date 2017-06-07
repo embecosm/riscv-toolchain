@@ -38,7 +38,7 @@ Building the toolchain
 ----------------------
 
 NOTE: The device-tree-compiler package is required to build riscv-isa-sim
-(SPIKE).
+(SPIKE) and verilator is required to build the PICORV32 GDB Server.
 
 To build a 32-bit riscv32ima toolchain (binutils, gdb, gcc, newlib, SPIKE, etc.):
 

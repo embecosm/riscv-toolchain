@@ -56,9 +56,10 @@ git clone -o ${US} ssh://git@github.com/gcc-mirror/gcc gcc
 git clone -o ${US} ssh://git@github.com/riscv/riscv-newlib.git newlib
 git clone -o ${US} ssh://git@github.com/riscv/riscv-dejagnu.git dejagnu
 git clone -o ${EM} ${BASE_URL}/riscv-gdbserver.git gdbserver
+git clone -o ${EM} ${BASE_URL}/picorv32 picorv32
 git clone -o ${US} ssh://git@github.com/riscv/riscv-pk.git riscv-pk
 git clone -o ${US} ssh://git@github.com/riscv/riscv-fesvr.git riscv-fesvr
 git clone -o ${US} ssh://git@github.com/riscv/riscv-isa-sim.git riscv-isa-sim
 
-echo "Note: To build riscv-isa-sim (SPIKE), you will need the device-tree-compiler package installed.\n"
+echo "Note: To build everything, you will need device-tree-compiler and verilator installed.\n"
 
