@@ -61,6 +61,6 @@ To run using the SPIKE ISA simulator:
 
 To run with the GDB simulator:
 ```
-TARGET_BOARD=riscv-sim ./run-spike-tests.sh
+TARGET_BOARD=riscv-sim ./run-tests.sh
 ```
 
