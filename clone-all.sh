@@ -61,5 +61,5 @@ git clone -o ${US} ssh://git@github.com/riscv/riscv-pk.git riscv-pk
 git clone -o ${US} ssh://git@github.com/riscv/riscv-fesvr.git riscv-fesvr
 git clone -o ${US} ssh://git@github.com/riscv/riscv-isa-sim.git riscv-isa-sim
 
-echo "Note: To build everything, you will need device-tree-compiler and verilator installed.\n"
+echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
 
