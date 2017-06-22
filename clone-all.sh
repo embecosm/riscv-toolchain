@@ -60,6 +60,7 @@ git clone -o ${EM} ${BASE_URL}/picorv32 picorv32
 git clone -o ${US} ssh://git@github.com/riscv/riscv-pk.git riscv-pk
 git clone -o ${US} ssh://git@github.com/riscv/riscv-fesvr.git riscv-fesvr
 git clone -o ${US} ssh://git@github.com/riscv/riscv-isa-sim.git riscv-isa-sim
+git clone -o ${US} ssh://git@github.com/mageec/beebs.git beebs
 
 echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
 
