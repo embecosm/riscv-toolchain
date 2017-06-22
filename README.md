@@ -18,17 +18,21 @@ Getting the sources
 
 Use the `clone-all.sh` script in this directory to check out various
 repositories alongside this one. To clone for read only access use:
+
 ```
 ./clone-all.sh
 ```
+
 To clone for SSH write access to the Embecosm owned repos (you must have write
 permission granted).
+
 ```
 ./clone-all.sh -dev
 ```
 
 NOTE: As of May 31st 2017, the GDB repository is in a transitional state
 and doesn't build, so you will need to roll back to a working commit as follows:
+
 ```
 cd ../gdb
 git reset --hard d66d5ca34a10631dde3555818636f585f8f553fd
@@ -60,7 +64,13 @@ To run using the SPIKE ISA simulator:
 ```
 
 To run with the GDB simulator:
+
 ```
 TARGET_BOARD=riscv-sim ./run-tests.sh
 ```
 
+To run with the GDB Server for PICORV32:
+
+```
+TARGET_BOARD=riscv-gdbserver ./run-tests.sh
+```

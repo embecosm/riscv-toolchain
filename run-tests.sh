@@ -41,7 +41,7 @@ export PATH=${INSTALL_DIR}/bin:$PATH
 
 # So that dejagnu can find the correct baseboard file (e.g. riscv-spike.exp)
 export DEJAGNULIBS=${TOP}/dejagnu
-
+export DEJAGNU=${TOOLCHAIN_DIR}/site.exp
 
 
 ### RESPOND TO ENVIRONMENT VARIABLES ###
@@ -65,8 +65,12 @@ fi
 
 
 # Optionally define this to refer to specific tests
-#   e.g. TESTSUBSET="execute.exp=2010*"
-TEST_SUBSET=
+#   e.g. TEST_SUBSET="execute.exp=2010*"
+if test x"$TEST_SUBSET" = x
+then
+	# The default is blank, to run everything
+	TEST_SUBSET=
+fi
 
 
 
@@ -75,8 +79,26 @@ TEST_SUBSET=
 # Needs to be run in the build tree for gcc
 cd ${GCC_STAGE_2_BUILD_DIR}
 
+if test x"$TARGET_BOARD" = xriscv-gdbserver
+then
+	# Set up and export any board parameters
+	export RISCV_NETPORT=51235
+	export RISCV_TIMEOUT=10
+	export RISCV_GDB_TIMEOUT=10
+	export RISCV_STACK_SIZE="4096"
+	export RISCV_TEXT_SIZE="65536"
+
+	# invoking one gdbserver
+	PARALLEL=1
+	echo "Launching GDB Server on port ${RISCV_NETPORT}"
+	${INSTALL_DIR}/bin/riscv32-gdbserver ${RISCV_NETPORT} &
+else
+	PARALLEL=8
+fi
+
+
 # We use check-gcc-c by default, so that no c++ tests are run
-make -j 8 check-gcc-c RUNTESTFLAGS="${TEST_SUBSET} --target=${TARGET_TRIPLET} --target_board=${TARGET_BOARD}"
+make -j $PARALLEL check-gcc-c RUNTESTFLAGS="${TEST_SUBSET} --target=${TARGET_TRIPLET} --target_board=${TARGET_BOARD}"
 
 
 

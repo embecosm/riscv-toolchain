@@ -1,0 +1,31 @@
+# RISCV specific site.exp
+
+# Copyright (C) 2017 Embecosm Limited.
+# Contributor Ian Bolton <ian.bolton@embecosm.com>
+
+# This file is part of the Embecosm RISC-V Toolchain build system.
+
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3 of the License, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Make sure we look in the right place for the board description files. Add
+# our local boards directories
+if ![info exists boards_dir] {
+    lappend boards_dir "[file dirname $env(DEJAGNU)]/dejagnu"
+    lappend boards_dir "[file dirname $env(DEJAGNU)]/dejagnu/baseboards"
+} else {
+    set boards_dir "[file dirname $env(DEJAGNU)]/dejagnu"
+    lappend boards_dir "[file dirname $env(DEJAGNU)]/dejagnu/baseboards"
+}
+
