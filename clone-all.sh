@@ -57,6 +57,7 @@ git clone -o ${US} ssh://git@github.com/riscv/riscv-newlib.git newlib
 git clone -o ${US} ssh://git@github.com/riscv/riscv-dejagnu.git dejagnu
 git clone -o ${EM} ${BASE_URL}/riscv-gdbserver.git gdbserver
 git clone -o ${EM} ${BASE_URL}/picorv32 picorv32
+git clone -o ${EM} ${BASE_URL}/ri5cy ri5cy
 git clone -o ${US} ssh://git@github.com/riscv/riscv-pk.git riscv-pk
 git clone -o ${US} ssh://git@github.com/riscv/riscv-fesvr.git riscv-fesvr
 git clone -o ${US} ssh://git@github.com/riscv/riscv-isa-sim.git riscv-isa-sim
