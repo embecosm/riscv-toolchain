@@ -11,7 +11,20 @@ Foundation's riscv-tools and riscv-gnu-toolchain builds are:
 - Only Newlib builds are supported, for bare-metal systems. There is no Linux
   support at present.
 - The default build is for RV32IMA. However, the architecture and ABI can be
-  modified.
+modified.
+
+Prerequisites
+-------------
+
+As well as a standard developer tool chain, you will need the device tree
+compiler.  On Ubuntu:
+```
+sudo apt install device-tree-compiler
+```
+or on Fedora:
+```
+sudo dnf install dtc
+```
 
 Getting the sources
 -------------------
@@ -35,7 +48,29 @@ and doesn't build, so you will need to roll back to a working commit as follows:
 
 ```
 cd ../gdb
-git reset --hard d66d5ca34a10631dde3555818636f585f8f553fd
+git reset --hard 80a1493
+```
+However the developers keep on rebasing so the commit number may change. You
+need to be on the default branch, which is `riscv-next` _not_ `master`.  Then
+look for a log entry:
+```
+Author: Palmer Dabbelt <palmer@dabbelt.com>
+Date:   Thu May 18 18:08:25 2017 -0700
+
+    (WIP) RISC-V: Add R_RISCV_DELETE, which marks bytes for deletion
+
+    We currently delete bytes by shifting an entire BFD backwards to
+    overwrite the bytes we no longer need.  The result is that relaxing a
+    BFD is quadratic time.
+
+    This patch adds an additional relocation that specifies a byte range
+    that will be deleted from the final object file, and adds a relaxation
+    pass (between the existing passes that delete bytes and the alignment
+    pass) that actually deletes the bytes.  Note that deletion is still
+    quadratic time, and nothing uses R_RISCV_DELETE yet.
+
+    R_RISCV_DELETE will never be emitted into ELF objects, so therefor isn't exposed
+    to the rest of binutils.
 ```
 
 Building the toolchain
