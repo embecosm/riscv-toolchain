@@ -50,18 +50,24 @@ US=github
 EM=embecosm
 
 cd ${topdir}
-git clone -o ${US} git://sourceware.org/git/binutils-gdb.git binutils
-git clone -o ${US} ssh://git@github.com/riscv/riscv-binutils-gdb gdb
-git clone -o ${US} ssh://git@github.com/gcc-mirror/gcc gcc
-git clone -o ${US} ssh://git@github.com/riscv/riscv-newlib.git newlib
-git clone -o ${US} ssh://git@github.com/riscv/riscv-dejagnu.git dejagnu
+
+# get the most important ones first
+git clone -o ${EM} ${BASE_URL}/riscv-binutils-gdb.git binutils
+git clone -o ${EM} ${BASE_URL}/riscv-gcc.git gcc
+git clone -o ${EM} ${BASE_URL}/riscv-gdb.git gdb
+git clone -o ${EM} ${BASE_URL}/riscv-newlib.git newlib
+
+# now get those for testing/executing
+git clone -o ${EM} ${BASE_URL}/riscv-dejagnu.git dejagnu
+
 git clone -o ${EM} ${BASE_URL}/riscv-gdbserver.git gdbserver
-git clone -o ${EM} ${BASE_URL}/picorv32 picorv32
-git clone -o ${EM} ${BASE_URL}/ri5cy ri5cy
-git clone -o ${US} ssh://git@github.com/riscv/riscv-pk.git riscv-pk
-git clone -o ${US} ssh://git@github.com/riscv/riscv-fesvr.git riscv-fesvr
-git clone -o ${US} ssh://git@github.com/riscv/riscv-isa-sim.git riscv-isa-sim
-git clone -o ${US} ssh://git@github.com/mageec/beebs.git beebs
+git clone -o ${EM} ${BASE_URL}/picorv32.git picorv32
+git clone -o ${EM} ${BASE_URL}/ri5cy.git ri5cy
+git clone -o ${EM} ${BASE_URL}/riscv-pk.git riscv-pk
+git clone -o ${EM} ${BASE_URL}/riscv-fesvr.git riscv-fesvr
+git clone -o ${EM} ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
+
+git clone -o ${EM} ${BASE_URL}/beebs.git beebs
 
 echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
 
