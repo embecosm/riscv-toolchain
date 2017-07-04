@@ -159,6 +159,7 @@ FESVR_BUILD_DIR=${BUILD_DIR}/riscv-fesvr
 PK_BUILD_DIR=${BUILD_DIR}/riscv-pk
 SPIKE_BUILD_DIR=${BUILD_DIR}/riscv-isa-sim
 PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
+RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
@@ -292,6 +293,17 @@ function mkdir_and_enter ()
        error "Failed to entry directory: ${DIR}"
     fi
 }
+
+function enter_dir ()
+{
+    DIR=$1
+
+    if ! cd ${DIR} >> ${LOGFILE} 2>&1
+    then
+       error "Failed to entry directory: ${DIR}"
+    fi
+}
+
 
 function run_command ()
 {
@@ -676,6 +688,8 @@ job_done
 
 job_start "Verilating PICORV32"
 
+rm -rf ${PICORV32_BUILD_DIR}
+
 mkdir_and_enter ${PICORV32_BUILD_DIR}
 
 if ! run_command cp -r ${TOP}/picorv32/scripts/gdbserver/* ${PICORV32_BUILD_DIR}
@@ -689,6 +703,33 @@ then
 fi
 
 job_done
+
+
+
+# ====================================================================
+#                Verilate RI5CY
+# ====================================================================
+
+job_start "Verilating RI5CY"
+
+rm -rf ${RI5CY_BUILD_DIR}
+
+mkdir_and_enter ${RI5CY_BUILD_DIR}
+
+if ! run_command cp -r ${TOP}/ri5cy/* ${RI5CY_BUILD_DIR}
+then
+    error "Failed to copy files for RI5CY build"
+fi
+
+enter_dir ${RI5CY_BUILD_DIR}/verilator-model
+
+if ! run_command make
+then
+    error "Failed to verilate R15CY"
+fi
+
+job_done
+
 
 
 # ====================================================================
@@ -708,8 +749,8 @@ mkdir_and_enter ${GDBSERVER_BUILD_DIR}
 
 if ! run_command ${TOP}/gdbserver/configure \
            --with-verilator-headers=/usr/share/verilator/include \
-           CXXFLAGS="-std=gnu++11 -O3" \
-           VTESTBENCH=${PICORV32_BUILD_DIR}/obj_dir
+           --prefix=${TOP}/install --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir --with-picorv32-topmodule=testbench \
+	   --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir --with-ri5cy-topmodule=top
 then
     error "Failed to configure GDB Server"
 fi
@@ -719,7 +760,7 @@ then
     error "Failed to build GDB Server"
 fi
 
-if ! run_command cp server/riscv-gdbserver ${INSTALL_DIR}/bin/riscv32-gdbserver
+if ! run_command make install
 then
     error "Failed to install GDB Server"
 fi
