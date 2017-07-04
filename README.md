@@ -59,6 +59,18 @@ There is an optional argument, `--pull`  to pull the latest code for each branch
 ./checkout-all.sh --pull
 ```
 
+Using a particular version of the source
+----------------------------------------
+
+The `checkout-tag.sh` script can be used to checkout a particular tag for each
+repository
+
+```
+./checkout-all.sh  mytag
+```
+
+checks out the `mytag` tag on each branch.
+
 Building the tool chain
 -----------------------
 

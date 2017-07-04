@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Tagging script for the RISC-V tool chain
+# Checkout script for the RISC-V tool chain
 
 # Copyright (C) 2009, 2013, 2014, 2015, 2016, 2017 Embecosm Limited
 # Contributor Jeremy Bennett <jeremy.bennett@embecosm.com>
@@ -23,31 +23,27 @@
 
 # Invocation Syntax
 
-#     tag-all.sh <tagname> <tagmess>
+#     checkout-all.sh <tag>
 
 # Argument meanings:
 
-#     <tagname>  Tag name to apply to all repositories
+#     <tag>  The tag to checkout
 
-#     <tagmess>  Tag message to associate with the tag
+# Parse arg
 
-# WARNING: It is up to the user to ensure all repositories are in the correct
-# location that the remote is embecosm
-
-# Parse args
-
-if [ $# != 2 ]
+if [ $# != 1 ]
 then
-    echo "Usage: tag-all.sh <tagname> <tagmess>"
+    echo "Usage: checkout-tag.sh <tagname>"
     exit 1
 fi
 
 tagname=$1
-tagmess="$2"
 
 # Set the top level directory.
 
 topdir=$(cd $(dirname $0)/..;pwd)
+
+# toolchain must be last repo!
 
 repos="binutils      \
        gcc           \
@@ -66,22 +62,18 @@ repos="binutils      \
 for r in ${repos}
 do
     cd ${topdir}/${r}
+    # Ignore failed fetches (may be offline)
 
-    printf  "%-14s tagging..." "${r}:"
+    printf  "%-14s fetching..." "${r}:"
+    echo fetch --all > /dev/null 2>&1 || true
 
-    if git tag -a ${tagname} -m "${tagmess}" 2>&1 /dev/null
+    # Checkout the tag
+
+    echo -n "checking out..."
+    if ! git checkout ${tag} > /dev/null 2>&1
     then
-	# Tags are always on the embecosm remote.
-
-	echo -n "pushing..."
-
-	if ! git push embecosm ${tagname} 2>&1 /dev/null
-	then
-	    echo "failed"
-	else
-	    echo "succeeded"
-	fi
-    else
 	echo "failed"
+    else
+	echo "succeeded"
     fi
 done
