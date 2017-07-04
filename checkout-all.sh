@@ -43,7 +43,7 @@ fi
 topdir=$(cd $(dirname $0)/..;pwd)
 
 repos="binutils:master           \
-       gcc:master                \
+       gcc:embecosm-stable       \
        gdb:riscv-next            \
        newlib:bare-metal-hack    \
        dejagnu:riscv-dejagnu-1.6 \

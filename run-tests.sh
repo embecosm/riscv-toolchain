@@ -79,7 +79,7 @@ fi
 # Needs to be run in the build tree for gcc
 cd ${GCC_STAGE_2_BUILD_DIR}
 
-if test x"$TARGET_BOARD" = xriscv-gdbserver
+if test x"$TARGET_BOARD" = xriscv-picorv32
 then
 	# Set up and export any board parameters
 	export RISCV_NETPORT=51235
@@ -91,9 +91,26 @@ then
 	# invoking one gdbserver
 	PARALLEL=1
 	echo "Launching GDB Server on port ${RISCV_NETPORT}"
-	${INSTALL_DIR}/bin/riscv32-gdbserver ${RISCV_NETPORT} &
+	${INSTALL_DIR}/bin/riscv-gdbserver -c picorv32 ${RISCV_NETPORT} &
+	TARGET_BOARD=riscv-gdbserver
+else
+if test x"$TARGET_BOARD" = xriscv-ri5cy
+then
+	# Set up and export any board parameters
+	export RISCV_NETPORT=51235
+	export RISCV_TIMEOUT=10
+	export RISCV_GDB_TIMEOUT=10
+	export RISCV_STACK_SIZE="4096"
+	export RISCV_TEXT_SIZE="65536"
+
+	# invoking one gdbserver
+	PARALLEL=1
+	echo "Launching GDB Server on port ${RISCV_NETPORT}"
+	${INSTALL_DIR}/bin/riscv-gdbserver -c RI5CY ${RISCV_NETPORT} &
+	TARGET_BOARD=riscv-gdbserver
 else
 	PARALLEL=8
+fi
 fi
 
 
@@ -110,6 +127,10 @@ echo "RESULTS FILES (which will be overwritten if you run again) ARE HERE:"
 echo "Complete log: ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.log"
 echo "Summary file: ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.sum"
 
+
+# Kill off riscv-gdbserver
+echo "Killing off all riscv-gdbserver processes."
+killall -9 riscv-gdbserver
 
 # Make it easy for the user to back-up their results, if they supplied a RESULTS_DIR
 if test x"$RESULTS_DIR" != x

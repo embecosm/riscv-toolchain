@@ -103,10 +103,15 @@ To run with the GDB simulator:
 TARGET_BOARD=riscv-sim ./run-tests.sh
 ```
 
+To run with the GDB Server for RI5CY:
+```
+TARGET_BOARD=riscv-ri5cy ./run-tests.sh
+```
+
 To run with the GDB Server for PICORV32:
 
 ```
-TARGET_BOARD=riscv-gdbserver ./run-tests.sh
+TARGET_BOARD=riscv-picorv32 ./run-tests.sh
 ```
 
 Tagging the tool chain
