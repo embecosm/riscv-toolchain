@@ -53,7 +53,7 @@ repos="binutils:master           \
        riscv-pk:master           \
        riscv-fesvr:master        \
        riscv-isa-sim:master      \
-       beebs:master"
+       beebs:picorv32"
 
 for r in ${repos}
 do
