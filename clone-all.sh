@@ -67,7 +67,7 @@ git clone -o ${EM} ${BASE_URL}/riscv-pk.git riscv-pk
 git clone -o ${EM} ${BASE_URL}/riscv-fesvr.git riscv-fesvr
 git clone -o ${EM} ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
 
-git clone -o ${EM} ${BASE_URL}/beebs.git beebs
+git clone -o ${EM} ${BASE_URL}/riscv-beebs.git beebs
 
 echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
 
