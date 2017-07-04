@@ -24,7 +24,7 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 # extension. However, note that the HiFive1 is rv32imac.
 
 WITH_TARGET=riscv32-unknown-elf
-WITH_ARCH=rv32ima
+WITH_ARCH=rv32i
 WITH_ABI=ilp32
 SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
