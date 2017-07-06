@@ -63,13 +63,13 @@ do
     cd ${topdir}/${tool}
     # Ignore failed fetches (may be offline)
 
-    printf  "%-14s fetching..." "${tool}:"
+    printf  "%-14s fetching...  " "${tool}:"
     git fetch --all > /dev/null 2>&1 || true
 
     # Checkout the branch. Not sure what happens if the branch is in mutliple
     # remotes.
 
-    echo -n "checking out..."
+    echo -n "checking out ${branch} ...  "
     git checkout ${branch} > /dev/null 2>&1 || true
 
     # Pull to the latest if requested.
