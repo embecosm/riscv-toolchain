@@ -20,9 +20,6 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 # ====================================================================
 
-# Architecture is rv32ima because riscv-sim doesn't support the C
-# extension. However, note that the HiFive1 is rv32imac.
-
 WITH_TARGET=riscv32-unknown-elf
 WITH_ARCH=rv32i
 WITH_ABI=ilp32
@@ -30,6 +27,7 @@ SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 BUILD_DIR=${TOP}/build
 INSTALL_DIR=${TOP}/install
+VERILATOR_DIR=`pkg-config --variable=prefix verilator`
 JOBS=
 LOAD=
 
@@ -748,7 +746,7 @@ fi
 mkdir_and_enter ${GDBSERVER_BUILD_DIR}
 
 if ! run_command ${TOP}/gdbserver/configure \
-           --with-verilator-headers=/usr/share/verilator/include \
+           --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
            --prefix=${TOP}/install --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir --with-picorv32-topmodule=testbench \
 	   --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir --with-ri5cy-topmodule=top
 then
