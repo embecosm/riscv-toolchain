@@ -33,6 +33,9 @@
 #     -dev  Clone Embecosm repos as SSH, rather than HTTPS, allowing write
 #           access.
 
+# If the BASE_URL environment variable is set, then that is used as the base of
+# all repository URLs, to allow cloning from non-github sources (e.g. local
+# mirrors).
 
 # Set the top level directory.
 topdir=$(cd $(dirname $0)/..;pwd)
@@ -41,7 +44,11 @@ topdir=$(cd $(dirname $0)/..;pwd)
 if [ \( $# = 1 \) -a \( "x$1" = "x-dev" \) ]
 then
     BASE_URL=git@github.com:embecosm
-else
+fi
+
+# Set the default base URL, if it is not already provided by the environment.
+if [ -z ${BASE_URL+x} ]
+then
     BASE_URL=https://github.com/embecosm
 fi
 
