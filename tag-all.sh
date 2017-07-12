@@ -69,13 +69,13 @@ do
 
     printf  "%-14s tagging..." "${r}:"
 
-    if git tag -a ${tagname} -m "${tagmess}" 2>&1 /dev/null
+    if git tag -a ${tagname} -m "${tagmess}" > /dev/null 2>&1 
     then
 	# Tags are always on the embecosm remote.
 
 	echo -n "pushing..."
 
-	if ! git push embecosm ${tagname} 2>&1 /dev/null
+	if ! git push embecosm ${tagname} > /dev/null 2>&1 
 	then
 	    echo "failed"
 	else

@@ -70,7 +70,7 @@ do
     # Checkout the tag
 
     echo -n "checking out..."
-    if ! git checkout ${tag} > /dev/null 2>&1
+    if ! git checkout ${tagname} > /dev/null 2>&1
     then
 	echo "failed"
     else
