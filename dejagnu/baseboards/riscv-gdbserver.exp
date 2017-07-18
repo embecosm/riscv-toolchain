@@ -77,9 +77,10 @@ set_board_info gdb,nosignals 1
 set_board_info gdb,skip_huge_test 0
 set_board_info gdb,skip_float_tests 0
 set_board_info gdb,use_precord 0
-set_board_info gdb,noargs 1
+set_board_info noargs 1
 set_board_info gdb,exit_is_reliable 0
 set_board_info gdb,no_thread_names 1
+set_board_info gdb,no_self_modifying_code 1
 
 
 #set_board_info gdb,no_long_long 1
