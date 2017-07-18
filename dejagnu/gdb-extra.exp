@@ -1,0 +1,216 @@
+# Copyright (C) 2017 Embecosm Limited.
+
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3 of the License, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Note our usage in the log file.
+send_user "Using [pwd]/gdb-extra.exp for supplementary proc definitions\n"
+
+# The standard GDB load does not deal with the possibility of a remote GDB.
+#
+# We need to redefine gdb_load to load the program on to the target. Not at
+# all clear why DejaGnu can't get this right in the first place...
+proc gdb_load { arg } {
+    global timeout
+    global verbose
+    global GDB
+    global gdb_prompt
+
+    # This is all the default does
+    if { $arg != "" } {
+	if [gdb_file_cmd $arg] then {
+	    return -1
+	}
+    }
+
+    # Connect to the target
+    if {[target_info exists gdb_protocol]} {
+	set protocol [target_info gdb_protocol]
+    } else {
+	set protocol "remote"
+    }
+
+    if {[target_info exists gdb_serial]} {
+	set serial [target_info gdb_serial]
+    } elseif {[target_info exists serial]} {
+	set serial [target_info serial]
+    } else {
+	set serial [target_info netport]
+    }
+
+    remote_send host "target $protocol ${serial}\n"
+    remote_expect host $timeout {
+	-re "Kill it?.*y or n.*" {
+	    remote_send host "y\n"
+	    exp_continue
+	}
+	-re "$gdb_prompt $"	{
+	    verbose "Set remote target to $serial" 2
+	}
+	timeout {
+	    warning "Couldn't set remote target."
+	    return -1
+	}
+    }
+
+    # Reset the target to get it into a consistent state.
+    remote_send host "monitor reset\n"
+    remote_expect host 10 {
+	-re ".*$gdb_prompt $" {
+	    verbose "Reset target" 2
+	}
+	default {
+	    return { "fail" "" }
+	}
+    }
+
+    # Set a remote CPU timeout in seconds if specified. This is an arbitrary
+    # value.
+    if { [target_info exists gdb,remote_timeout] } {
+	set remote_timeout [target_info gdb,remote_timeout]
+	remote_send host "monitor timeout $remote_timeout\n"
+	remote_expect host 10 {
+	    -re ".*$gdb_prompt $" {
+		verbose "Set remote timeout to $remote_timeout" 2
+	    }
+	    default {
+		return { "fail" "" }
+	    }
+	}
+    }
+
+    # Having connected, load the program
+    remote_send host "load\n"
+    remote_expect host $timeout {
+	-re "Transfer rate.*$gdb_prompt $" {
+	    verbose "Loaded $arg into $GDB\n" 2
+	    return 0
+	}
+	default {
+	    verbose "Failed to load $arg." 2
+	    return -1
+	}
+    }
+}
+
+# Similar to the above redefinition of gdb_load, redefine mi_gdb_load.
+proc mi_gdb_load { arg } {
+    global timeout
+    global mi_gdb_prompt
+    global GDB
+
+    # This is what the default does.
+    if { $arg != "" } {
+        mi_gdb_file_cmd $arg
+    }
+
+    # Connect to the target
+    if {[target_info exists gdb_protocol]} {
+	set protocol [target_info gdb_protocol]
+    } else {
+	set protocol "remote"
+    }
+
+    if {[target_info exists gdb_serial]} {
+	set serial [target_info gdb_serial]
+    } elseif {[target_info exists serial]} {
+	set serial [target_info serial]
+    } else {
+	set serial [target_info netport]
+    }
+
+    remote_send host "47-target-select $protocol ${serial}\n"
+    remote_expect host $timeout {
+	-re "Kill it?.*y or n.*" {
+	    remote_send host "y\n"
+	    exp_continue
+	}
+        -re "47\\^connected.*$mi_gdb_prompt" {
+	    verbose "Set remote target to $serial" 2
+        }
+	-re "$mi_gdb_prompt $"	{
+	    verbose "Set remote target to $serial" 2
+	}
+	timeout {
+	    warning "Couldn't set remote target."
+	    return -1
+	}
+    }
+
+    # Reset the target to get it into a consistent state.
+    remote_send host "monitor reset\n"
+    remote_expect host 10 {
+	-re "\\\^done\r\n$mi_gdb_prompt$" {
+	    verbose "Reset target" 2
+	}
+	default {
+	    return { "fail" "" }
+	}
+    }
+
+    # Set a remote CPU timeout in seconds if specified. This is an arbitrary
+    # value.
+    if { [target_info exists gdb,remote_timeout] } {
+	set remote_timeout [target_info gdb,remote_timeout]
+	remote_send host "monitor timeout $remote_timeout\n"
+	remote_expect host 10 {
+	    -re "\\\^done\r\n$mi_gdb_prompt$" {
+		verbose "Set remote timeout to $remote_timeout" 2
+	    }
+	    default {
+		return { "fail" "" }
+	    }
+	}
+    }
+
+    # Having connected, load the program
+    remote_send host "load\n"
+    remote_expect host $timeout {
+	-re "\\\^done\r\n$mi_gdb_prompt$" {
+	    verbose "Loaded $arg into $GDB\n" 2
+	    return 0
+	}
+	default {
+	    verbose "Failed to load $arg." 2
+	    return -1
+	}
+    }
+
+    return 1
+}
+
+proc proc_exists { p } {
+    return uplevel 1 [expr {[llength [info procs $p]] > 0}]
+}
+
+# Due to the way that MI support is implemented (each mi test loads
+# the mi-support.exp) library itself, it is not possible to override
+# functions from that library.
+#
+# My solution is to override the load_lib call itself, and have this
+# force keep my library overrider around.
+rename load_lib old_load_lib
+proc load_lib { args } {
+    set move_back 0
+    if { [proc_exists mi_gdb_load] } {
+        rename mi_gdb_load backup_mi_gdb_load
+        set move_back 1
+    }
+    old_load_lib $args
+    if {$move_back} {
+        if { [proc_exists mi_gdb_load] } {
+            rename mi_gdb_load ""
+        }
+        rename backup_mi_gdb_load mi_gdb_load
+    }
+}

@@ -27,6 +27,8 @@ set gdb_print_return_code "print /u \$a0"
 # We need some extra and modified procs for testing through GDB. These
 # supplement or override the standard procs.
 search_and_load_file "library file" "gdb-stub-extra.exp" ${boards_dir}
+search_and_load_file "library file" "gdb-extra.exp" ${boards_dir}
+search_and_load_file "library file" "remote-extra.exp" ${boards_dir}
 
 # No default multilib options are needed for this board.
 process_multilib_options ""
