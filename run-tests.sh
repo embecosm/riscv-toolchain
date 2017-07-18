@@ -1,152 +1,205 @@
 #!/bin/bash
 
-# Simple script for running GCC regression tests for the RISC-V toolchain
+error () {
+    echo "ERROR: $1"
+    exit 1
+}
 
-# Copyright (C) 2017 Embecosm Limited.
-# Contributor Ian Bolton <ian.bolton@embecosm.com>
+# ====================================================================
 
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation; either version 3 of the License, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-
-# You should have received a copy of the GNU General Public License along
-# with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# Example invocations:
-#
-#   ./run-tests.sh
-#   TARGET_BOARD=riscv-sim TARGET_TRIPLET=riscv64-unknown-elf ./run-tests.sh
-#   RESULTS_DIR=`pwd` ./run-tests.sh
-#
-
-
-### DECIDE WHERE KEY THINGS ARE ###
-
-# Set up various directory variables
 TOOLCHAIN_DIR=$(cd "`dirname \"$0\"`"; pwd)
 TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
-INSTALL_DIR=${TOP}/install
+
+# ====================================================================
+
+WITH_TARGET=riscv32-unknown-elf
 BUILD_DIR=${TOP}/build
+RESULTS_DIR=${TOP}/results
+INSTALL_DIR=${TOP}/install
+TARGET_BOARD=riscv-spike
+TARGET_SUBSET=
+TOOL=gcc
+COMMENT="none"
+
+# ====================================================================
+
+until
+opt=$1
+case ${opt} in
+    --build-dir)
+	shift
+	BUILD_DIR=$(realpath -m $1)
+	;;
+
+    --install-dir)
+	shift
+	INSTALL_DIR=$(realpath -m $1)
+	;;
+
+    --results-dir)
+	shift
+	RESULTS_DIR=$(realpath -m $1)
+	;;
+
+    --with-target)
+        shift
+        WITH_TARGET=$1
+        ;;
+
+    --with-board)
+        shift
+        TARGET_BOARD=$1
+        ;;
+
+    --test-subset)
+        shift
+        TEST_SUBSET=$1
+        ;;
+
+    --tool)
+        shift
+        TOOL=$1
+        ;;
+
+    --comment)
+        shift
+        COMMENT=$1
+        ;;
+
+    --help)
+        echo "Usage: ./run-tests.sh [--build-dir <dir>]"
+        echo "                      [--install-dir <dir>]"
+        echo "                      [--results-dir <dir>]"
+        echo "                      [--with-target <triplet>]"
+        echo "                      [--with-board <board>]"
+        echo "                      [--test-subset <string>]"
+        echo "                      [--tool gcc | gdb]"
+        echo "                      [--comment <text>]"
+        echo "                      [--help]"
+        echo ""
+        echo "The default --with-target is 'riscv32-unknown-elf'."
+        echo ""
+        echo "The default for --with-board is 'riscv-spike', other"
+        echo "options are 'riscv-picorv32' or 'riscv-ri5cy'."
+        echo ""
+        exit 1
+        ;;
+
+    ?*)
+        error "Unknown argument '$1' (try --help)"
+	;;
+
+    *)
+        ;;
+esac
+[ "x${opt}" = "x" ]
+do
+    shift
+done
+
+# ====================================================================
+
+RESULTS_DIR=${RESULTS_DIR}/results-$(date +%F-%H%M)
+mkdir -p ${RESULTS_DIR}
+[ ! -z "${RESULTS_DIR}" ] || error "no results directory"
+rm -f ${RESULTS_DIR}/*
+
+# ====================================================================
+
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
+GDB_BUILD_DIR=${BUILD_DIR}/gdb
+
+# ====================================================================
 
 # So that spike, riscv32-unknown-elf-run, etc. can be found
 export PATH=${INSTALL_DIR}/bin:$PATH
+
+# ====================================================================
 
 # So that dejagnu can find the correct baseboard file (e.g. riscv-spike.exp)
 export DEJAGNULIBS=${TOP}/dejagnu
 export DEJAGNU=${TOOLCHAIN_DIR}/site.exp
 
+# ====================================================================
 
-### RESPOND TO ENVIRONMENT VARIABLES ###
-
-# For simplicity, we allow the user to select the board via environment variable
-#   e.g. TARGET_BOARD=riscv-sim ./run-tests.sh
-if test x"$TARGET_BOARD" = x
-then
-	# Using SPIKE is the default because it passes more tests
-	TARGET_BOARD="riscv-spike"
-fi
-
-
-# As with TARGET_BOARD, this is selectable via environment variable, for simplicity
-#   e.g. TARGET_TRIPLET=riscv64-unknown-elf ./run-tests.sh
-if test x"$TARGET_TRIPLET" = x
-then
-	# Our default architecture of interest is 32-bit
-	TARGET_TRIPLET=riscv32-unknown-elf
-fi
-
-
-# Optionally define this to refer to specific tests
-#   e.g. TEST_SUBSET="execute.exp=2010*"
-if test x"$TEST_SUBSET" = x
-then
-	# The default is blank, to run everything
-	TEST_SUBSET=
-fi
-
-
-
-### DO THE ACTUAL WORK ###
-
-# Needs to be run in the build tree for gcc
-cd ${GCC_STAGE_2_BUILD_DIR}
-
-if test x"$TARGET_BOARD" = xriscv-picorv32
-then
-	# Set up and export any board parameters
+# Start gdbserver
+GDBSERVER_PID=
+case "${TARGET_BOARD}" in
+    riscv-picorv32|riscv-ri5cy)
+	# Set up and export any board parameters.
 	export RISCV_NETPORT=51235
 	export RISCV_TIMEOUT=10
 	export RISCV_GDB_TIMEOUT=10
 	export RISCV_STACK_SIZE="4096"
 	export RISCV_TEXT_SIZE="65536"
 
-	# invoking one gdbserver
+	# We only start one gdbserver, so only run one test at a time.
 	PARALLEL=1
-	echo "Launching GDB Server on port ${RISCV_NETPORT}"
-	${INSTALL_DIR}/bin/riscv-gdbserver -c picorv32 ${RISCV_NETPORT} &
-	TARGET_BOARD=riscv-gdbserver
-else
-if test x"$TARGET_BOARD" = xriscv-ri5cy
-then
-	# Set up and export any board parameters
-	export RISCV_NETPORT=51235
-	export RISCV_TIMEOUT=10
-	export RISCV_GDB_TIMEOUT=10
-	export RISCV_STACK_SIZE="4096"
-	export RISCV_TEXT_SIZE="65536"
 
-	# invoking one gdbserver
-	PARALLEL=1
-	echo "Launching GDB Server on port ${RISCV_NETPORT}"
-	${INSTALL_DIR}/bin/riscv-gdbserver -c RI5CY ${RISCV_NETPORT} &
-	TARGET_BOARD=riscv-gdbserver
-else
+        # Select the -c option to pass when starting gdbserver.
+        case "${TARGET_BOARD}" in
+            riscv-picorv32)
+                C_OPT="picorv32"
+                ;;
+            riscv-ri5cy)
+                C_OPT="RI5CY"
+                ;;
+            *)
+        esac
+
+        # Select common board name to select the dejagnu config file.
+        ORIGINAL_TARGET_BOARD=${TARGET_BOARD}
+        TARGET_BOARD=riscv-gdbserver
+
+        echo ${INSTALL_DIR}/bin/riscv-gdbserver -c ${C_OPT} ${RISCV_NETPORT}
+        ${INSTALL_DIR}/bin/riscv-gdbserver -c ${C_OPT} ${RISCV_NETPORT} & pid=$!
+	echo "Started GDB server on port ${RISCV_NETPORT} (process ${pid})"
+        GDBSERVER_PID=$pid
+        ;;
+
+    *)
 	PARALLEL=8
-fi
-fi
+        ;;
+esac
 
+# ====================================================================
 
-# We use check-gcc-c by default, so that no c++ tests are run
-make -j $PARALLEL check-gcc-c RUNTESTFLAGS="${TEST_SUBSET} --target=${TARGET_TRIPLET} --target_board=${TARGET_BOARD}"
+# Create a README with info about the test
+readme=${RESULTS_DIR}/README
+echo "Test of risc-v tool chain"                             >  ${readme}
+echo "========================="                             >> ${readme}
+echo ""                                                      >> ${readme}
+echo "Start time:         $(date -u +%d\ %b\ %Y\ at\ %H:%M)" >> ${readme}
+echo "Target:             ${WITH_TARGET}"                    >> ${readme}
+echo "Test board:         ${ORIGINAL_TARGET_BOARD}"          >> ${readme}
+echo "Test subset:        ${TEST_SUBSET}"                    >> ${readme}
+echo "Comment:            ${COMMENT}"                        >> ${readme}
+echo "Tool:               ${TOOL}"                           >> ${readme}
 
+case "${TOOL}" in
+    gcc)
+        cd ${GCC_STAGE_2_BUILD_DIR}
+        make -j $PARALLEL check-gcc-c RUNTESTFLAGS="${TEST_SUBSET} --target=${WITH_TARGET} --target_board=${TARGET_BOARD}"
+	cp ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.log ${RESULTS_DIR}/gcc.log
+	cp ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.sum ${RESULTS_DIR}/gcc.sum
+        ;;
+    gdb)
+        cd ${GDB_BUILD_DIR}
+        make -j $PARALLEL check-gdb RUNTESTFLAGS="${TEST_SUBSET} --target=${WITH_TARGET} --target_board=${TARGET_BOARD}"
+	cp ${GDB_BUILD_DIR}/gdb/testsuite/gdb.log ${RESULTS_DIR}/gdb.log
+	cp ${GDB_BUILD_DIR}/gdb/testsuite/gdb.sum ${RESULTS_DIR}/gdb.sum
+        ;;
+    *)
+        error "unknown tool ${TOOL}"
+        ;;
+esac
 
+# ====================================================================
 
-### FINISH UP ###
-
-# Print out where the results are, so user can easily refer to them
-echo "--------------------------------------------------------------------"
-echo "RESULTS FILES (which will be overwritten if you run again) ARE HERE:" 
-echo "Complete log: ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.log"
-echo "Summary file: ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.sum"
-
-
-# Kill off riscv-gdbserver
-echo "Killing off all riscv-gdbserver processes."
-killall -9 riscv-gdbserver
-
-# Make it easy for the user to back-up their results, if they supplied a RESULTS_DIR
-if test x"$RESULTS_DIR" != x
+if [ ! -z "${GDBSERVER_PID}" ]
 then
-if [ -d $RESULTS_DIR ]
-then
-	# If the directory exists, copy logs there for convenience
-	echo "Results were also copied to here:"
-	FINISHED=$(date +%Y%m%d%H%M%S)
-	DIFFERENTIATOR=${TARGET_TRIPLET}.${TARGET_BOARD}.${FINISHED}
-	echo "Complete log: ${RESULTS_DIR}/gcc.${DIFFERENTIATOR}.log"
-	echo "Summary file: ${RESULTS_DIR}/gcc.${DIFFERENTIATOR}.sum"
-	cp ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.log ${RESULTS_DIR}/gcc.${DIFFERENTIATOR}.log
-	cp ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.sum ${RESULTS_DIR}/gcc.${DIFFERENTIATOR}.sum
-else
-	# Keep things simple, rather than create new directories based on an environment variable
-	echo "(Results were not copied to $RESULTS_DIR because it doesn't exist.)"
+    echo "Killing off gdbserver (process ${GDBSERVER_PID})"
+    kill -9 ${GDBSERVER_PID} &>/dev/null
 fi
-fi
+
+# ====================================================================
