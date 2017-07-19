@@ -25,17 +25,12 @@ WITH_ARCH=rv32i
 WITH_ABI=ilp32
 SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
+DEBUG_BUILD=no
 BUILD_DIR=${TOP}/build
 INSTALL_DIR=${TOP}/install
 VERILATOR_DIR=`pkg-config --variable=prefix verilator`
 JOBS=
 LOAD=
-
-# Uncomment for everything to be built with debugging. This will make
-# the toolchain very slow.
-
-#export CFLAGS="-g -O0"
-#export CXXFLAGS="-g -O0"
 
 # ====================================================================
 
@@ -49,6 +44,7 @@ function usage () {
     echo "                      [--jobs <count>] [--load <load>]"
     echo "                      [--single-thread]"
     echo "                      [--clean]"
+    echo "                      [--debug]"
     echo "                      [--skip-gcc-stage-1]"
     echo "                      [--with-target <target>]"
     echo "                      [--with-arch <arch>]"
@@ -95,6 +91,10 @@ case ${opt} in
         CLEAN_BUILD=yes
 	;;
 
+    --debug)
+        DEBUG_BUILD=yes
+        ;;
+
     --with-target)
         shift
         WITH_TARGET=$1
@@ -131,6 +131,7 @@ echo "  Toolchain: ${TOOLCHAIN_DIR}"
 echo "     Target: ${TARGET_TRIPLET}"
 echo "       Arch: ${WITH_ARCH}"
 echo "        ABI: ${WITH_ABI}"
+echo "Debug build: ${DEBUG_BUILD}"
 echo "  Build Dir: ${BUILD_DIR}"
 echo "Install Dir: ${INSTALL_DIR}"
 
@@ -145,6 +146,12 @@ then
     rm -fr ${BUILD_DIR} ${INSTALL_DIR}
 else
     echo "Clean Build: no"
+fi
+
+if [ "x${DEBUG_BUILD}" = "xyes" ]
+then
+    export CFLAGS="-g3 -O0"
+    export CXXFLAGS="-g3 -O0"
 fi
 
 BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
