@@ -88,7 +88,8 @@ proc gdb_stub_ld { dest prog } {
 	}
 	# This one isn't in the standard version.
 	-re "A program is being debug.*change the file.*y or n. $" {
-	    remote_send host "y\n"
+	    verbose -log "\n\nGRM$expect_out(buffer)GRM\n\n"
+            remote_send host "y\n"
 	    exp_continue
 	}
 	-re "BFD:.*invalid string offset.*done.*$gdb_prompt $" {
@@ -107,6 +108,7 @@ proc gdb_stub_ld { dest prog } {
 	}
 	timeout {
 	    warning "(timeout) read symbol file"
+	    verbose -log "\n\nAPB$expect_out(buffer)APB\n\n"
 	    return [gdb_stub_retry_ld "$dest" "$prog"]
 	}
     }
