@@ -56,7 +56,27 @@ proc gdb_stub_init { dest args } {
     return 1
 }
 
-
+proc stacktrace {} {
+    set stack "Stack trace:\n"
+    for {set i 1} {$i < [info level]} {incr i} {
+        set lvl [info level -$i]
+        set pname [lindex $lvl 0]
+        append stack [string repeat " " $i]$pname
+        foreach value [lrange $lvl 1 end] arg [info args $pname] {
+            if {$arg ne ""} {
+                if {$value eq ""} {
+                    info default $pname $arg value
+                }
+                if {$value eq ""} {
+                    set value "{}"
+                }
+                append stack " $arg='$value'"
+            }
+        }
+        append stack \n
+    }
+    return $stack
+}
 
 # Override standard function to deal with extra possibility for message.
 #
@@ -71,6 +91,10 @@ proc gdb_stub_ld { dest prog } {
     global gdb_prompt
     global GDB
 
+    verbose -log "\n\n Prog name is $prog \n\n"
+    verbose -log "\n\nST [stacktrace] ST \n\n"
+
+
     if {![board_info $dest exists gdb_is_running]} {
 	if {![gdb_stub_restart $dest]} {
 	    return 0
@@ -80,6 +104,7 @@ proc gdb_stub_ld { dest prog } {
     set loadfile [file tail $prog]
     set loadpath [file dirname $prog]
 
+    exp_internal 1
     remote_send host "file $prog\n"
     remote_expect host 30 {
 	-re "A program is being debug.*Kill it.*y or n. $" {
@@ -94,6 +119,7 @@ proc gdb_stub_ld { dest prog } {
 	}
 	-re "BFD:.*invalid string offset.*done.*$gdb_prompt $" {
 	    warning "GDB file looks invalid, lets try again"
+            exp_internal 0
 	    return [gdb_stub_retry_ld "$dest" "$prog"]
 	}
         -re "Load new symbol table.*y or n. $" {
@@ -104,14 +130,18 @@ proc gdb_stub_ld { dest prog } {
 	-re "$gdb_prompt $" {
 	    # Hmmm...is retrying going to help? I kinda doubt it.
 	    warning "GDB couldn't read file"
+            exp_internal 0
 	    return [gdb_stub_retry_ld "$dest" "$prog"]
 	}
 	timeout {
 	    warning "(timeout) read symbol file"
 	    verbose -log "\n\nAPB$expect_out(buffer)APB\n\n"
+            exp_internal 0
 	    return [gdb_stub_retry_ld "$dest" "$prog"]
 	}
     }
+
+    exp_internal 0
 
     # just in case there are old breakpoints lying around.
     gdb_stub_delete_breakpoints
