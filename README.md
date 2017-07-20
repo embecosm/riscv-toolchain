@@ -91,27 +91,21 @@ include options for setting the architecture and ABI.
 Executing the GCC tests
 -----------------------
 
-To run using the SPIKE ISA simulator:
-
-```
-./run-tests.sh
-```
-
 To run with the GDB simulator:
 
 ```
-TARGET_BOARD=riscv-sim ./run-tests.sh
+./run-tests.sh --with-board riscv-sim
 ```
 
 To run with the GDB Server for RI5CY:
 ```
-TARGET_BOARD=riscv-ri5cy ./run-tests.sh
+./run-tests.sh --with-board riscv-ri5cy
 ```
 
 To run with the GDB Server for PICORV32:
 
 ```
-TARGET_BOARD=riscv-picorv32 ./run-tests.sh
+./run-tests.sh riscv-picorv32
 ```
 
 Tagging the tool chain
