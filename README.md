@@ -16,15 +16,8 @@ modified.
 Prerequisites
 -------------
 
-As well as a standard developer tool chain, you will need the device tree
-compiler.  On Ubuntu:
-```
-sudo apt install device-tree-compiler
-```
-or on Fedora:
-```
-sudo dnf install dtc
-```
+The Ri5cy and PivoRV32 verilator models require verilator version >=3.906.
+Versions >=3.884 may also work but are untested.
 
 Getting the sources
 -------------------

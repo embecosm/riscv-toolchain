@@ -16,7 +16,7 @@ WITH_TARGET=riscv32-unknown-elf
 BUILD_DIR=${TOP}/build
 RESULTS_DIR=${TOP}/results
 INSTALL_DIR=${TOP}/install
-TARGET_BOARD=riscv-spike
+TARGET_BOARD=riscv-sim
 TARGET_SUBSET=
 TOOL=gcc
 COMMENT="none"
@@ -79,7 +79,7 @@ case ${opt} in
         echo ""
         echo "The default --with-target is 'riscv32-unknown-elf'."
         echo ""
-        echo "The default for --with-board is 'riscv-spike', other"
+        echo "The default for --with-board is 'riscv-sim', other"
         echo "options are 'riscv-picorv32' or 'riscv-ri5cy'."
         echo ""
         exit 1

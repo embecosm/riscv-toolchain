@@ -1,16 +1,10 @@
 #!/bin/bash
 
-# Check we have verilator and device-tree-compiler before we start
+# Check we have verilator
 
 if ! test $(which verilator)
 then
         echo "ERROR: verilator required for building the GDB Server"
-	exit 1
-fi
-
-if ! test $(which dtc)
-then
-        echo "ERROR: device-tree-compiler (dtc) required to build SPIKE"
 	exit 1
 fi
 
@@ -160,9 +154,6 @@ GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage-1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
 DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
-FESVR_BUILD_DIR=${BUILD_DIR}/riscv-fesvr
-PK_BUILD_DIR=${BUILD_DIR}/riscv-pk
-SPIKE_BUILD_DIR=${BUILD_DIR}/riscv-isa-sim
 PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
 RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
@@ -658,10 +649,10 @@ job_done
 
 
 # ====================================================================
-#                Build GDB Server for PICORV32
+#             Build GDB Server for PICORV32 and Ri5cy
 # ====================================================================
 
-job_start "Building GDB Server for PICORV32"
+job_start "Building GDB Server for PICORV32 and Ri5cy"
 
 cd ${TOP}/gdbserver
 
