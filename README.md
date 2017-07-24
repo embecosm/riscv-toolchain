@@ -111,6 +111,30 @@ To run with the GDB Server for PICORV32:
 ./run-tests.sh --with-board riscv-picorv32
 ```
 
+Executing the RISC-V ISA tests
+------------------------------
+
+The test must be built before running the tests. They can be built
+using the `build-isa-tests.sh` script.
+
+To run with the GDB Server for RI5CY:
+
+```
+./run-isa-tests.sh
+```
+
+Or
+
+```
+./run-isa-tests --with-board riscv-ri5cy
+```
+
+To run with the GDB Server for PICORV32:
+
+```
+./run-isa-tests --with-board riscv-picorv32
+```
+
 Tagging the tool chain
 ----------------------
 
