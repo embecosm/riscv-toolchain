@@ -77,5 +77,10 @@ git clone -o ${EM} ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
 git clone -o ${EM} ${BASE_URL}/riscv-beebs.git beebs
 git clone -o ${EM} ${BASE_URL}/riscv-tests.git riscv-tests
 
+# initialize the submodule for the test environment in riscv-tests
+cd riscv-tests
+git submodule update --init --recursive
+cd ${topdir}
+
 echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
 
