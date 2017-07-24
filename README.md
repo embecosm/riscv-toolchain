@@ -80,6 +80,16 @@ etc.):
 To see the options for `build-all.sh`, use `./build-all.sh --help`. These
 include options for setting the architecture and ABI.
 
+Building the ISA tests
+----------------------
+
+To build the ISA tests for the RISC-V
+
+```
+./build-isa-tests.sh
+```
+
+To see the options for `build-all-isa.sh`, use `./build-all-isa.sh --help`.
 
 Executing the GCC tests
 -----------------------

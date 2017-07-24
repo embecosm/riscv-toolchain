@@ -61,6 +61,7 @@ repos="binutils      \
        riscv-fesvr   \
        riscv-isa-sim \
        beebs         \
+       riscv-tests   \
        toolchain"
 
 for r in ${repos}
