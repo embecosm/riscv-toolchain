@@ -97,7 +97,7 @@ Executing the GCC tests
 To run with the GDB simulator:
 
 ```
-./run-tests.sh --with-board riscv-sim
+./run-tests.sh
 ```
 
 To run with the GDB Server for RI5CY:
@@ -108,7 +108,7 @@ To run with the GDB Server for RI5CY:
 To run with the GDB Server for PICORV32:
 
 ```
-./run-tests.sh riscv-picorv32
+./run-tests.sh --with-board riscv-picorv32
 ```
 
 Tagging the tool chain
