@@ -56,13 +56,13 @@ case ${opt} in
 	;;
 
     --help)
-	echo "Usage: ./run-tests.sh [--build-dir <dir>]"
-	echo "                      [--install-dir <dir>]"
-	echo "                      [--results-dir <dir>]"
-	echo "                      [--with-target <target>]"
-	echo "                      [--with-board <board>]"
-	echo "                      [--comment <text>]"
-	echo "                      [--help]"
+	echo "Usage: ./run-isa-tests.sh [--build-dir <dir>]"
+	echo "                          [--install-dir <dir>]"
+	echo "                          [--results-dir <dir>]"
+	echo "                          [--with-target <target>]"
+	echo "                          [--with-board <board>]"
+	echo "                          [--comment <text>]"
+	echo "                          [--help]"
 	echo ""
 	echo "The default --with-target is 'riscv32-unknown-elf'."
 	echo ""
