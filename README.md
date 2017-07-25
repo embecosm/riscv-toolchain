@@ -91,6 +91,17 @@ To build the ISA tests for the RISC-V
 
 To see the options for `build-all-isa.sh`, use `./build-all-isa.sh --help`.
 
+Building testfloat
+------------------
+
+To build Berkeley TestFloat:
+
+```
+./build-testfloat.sh
+```
+
+To see the options for `build-testfloat.sh`, use `./build-testfloat.sh --help`.
+
 Executing the GCC tests
 -----------------------
 

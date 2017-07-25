@@ -42,19 +42,21 @@ fi
 
 topdir=$(cd $(dirname $0)/..;pwd)
 
-repos="binutils:master           \
-       gcc:embecosm-stable       \
-       gdb:riscv-next            \
-       newlib:bare-metal-hack    \
-       dejagnu:riscv-dejagnu-1.6 \
-       gdbserver:ri5cy           \
-       picorv32:gdbserver        \
-       ri5cy:verilator-model     \
-       riscv-pk:master           \
-       riscv-fesvr:master        \
-       riscv-isa-sim:master      \
-       beebs:picorv32            \
-       riscv-tests:master"
+repos="binutils:master                          \
+       gcc:embecosm-stable                      \
+       gdb:riscv-next                           \
+       newlib:bare-metal-hack                   \
+       dejagnu:riscv-dejagnu-1.6                \
+       gdbserver:ri5cy                          \
+       picorv32:gdbserver                       \
+       ri5cy:verilator-model                    \
+       riscv-pk:master                          \
+       riscv-fesvr:master                       \
+       riscv-isa-sim:master                     \
+       beebs:picorv32                           \
+       riscv-tests:master                       \
+       berkeley-softfloat-3:master              \
+       berkeley-testfloat-3:master"
 
 for r in ${repos}
 do

@@ -49,19 +49,21 @@ tagmess="$2"
 
 topdir=$(cd $(dirname $0)/..;pwd)
 
-repos="binutils      \
-       gcc           \
-       gdb           \
-       newlib        \
-       dejagnu       \
-       gdbserver     \
-       picorv32      \
-       ri5cy         \
-       riscv-pk      \
-       riscv-fesvr   \
-       riscv-isa-sim \
-       beebs         \
-       riscv-tests   \
+repos="binutils                 \
+       gcc                      \
+       gdb                      \
+       newlib                   \
+       dejagnu                  \
+       gdbserver                \
+       picorv32                 \
+       ri5cy                    \
+       riscv-pk                 \
+       riscv-fesvr              \
+       riscv-isa-sim            \
+       beebs                    \
+       riscv-tests              \
+       berkely-softfloat-3      \
+       berkely-testfloat-3      \
        toolchain"
 
 for r in ${repos}

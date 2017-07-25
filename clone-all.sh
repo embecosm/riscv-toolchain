@@ -77,6 +77,9 @@ git clone -o ${EM} ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
 git clone -o ${EM} ${BASE_URL}/riscv-beebs.git beebs
 git clone -o ${EM} ${BASE_URL}/riscv-tests.git riscv-tests
 
+git clone -o ${EM} ${BASE_URL}/berkeley-softfloat-3 berkeley-softfloat-3
+git clone -o ${EM} ${BASE_URL}/berkeley-testfloat-3 berkeley-testfloat-3
+
 # initialize the submodule for the test environment in riscv-tests
 cd riscv-tests
 git submodule update --init --recursive
