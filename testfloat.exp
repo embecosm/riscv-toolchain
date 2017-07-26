@@ -1,0 +1,26 @@
+load_lib dg.exp
+
+dg-init
+while { [gets stdin line] >= 0 } {
+    set exec [file rootname $line]
+
+    set status [remote_exec host "riscv32-unknown-elf-gcc -o $exec $line"]
+    if { [lindex $status 0] != 0 } {
+	verbose -log "assembler exited with status [lindex $status 0]"
+    }
+    if { [lindex $status 1] != "" } {
+	verbose -log "assembler output is:\n[lindex $status 1]" 2
+    }
+    set result [lindex $status 0]
+
+    if { $result != 0 } {
+      unresolved "$line assembler"
+      continue
+    }
+
+    set result [remote_load target $exec ""]
+    set status [lindex $result 0]
+    set output [lindex $result 1]
+    $status "$line"
+}
+dg-finish

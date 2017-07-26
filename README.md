@@ -146,6 +146,35 @@ To run with the GDB Server for PICORV32:
 ./run-isa-tests --with-board riscv-picorv32
 ```
 
+Executing testfloat tests
+-------------------------
+
+testfloat can be used to generate a large number of tests to
+check the correct implementation of IEEE-754 floating point
+arithmetic.
+
+Because it is not yet possible to run testfloat directly on
+the target, instead `testfloat_gen` is used to generate test
+data which is turned into a test case which is then executed
+through a DejaGNU testsuite.
+
+To generate and run tests with the GDB Server for RI5CY:
+
+```
+./run-testfloat-tests.sh --with-board riscv-ri5cy
+```
+
+To run with the GDB Server for PIVORV32:
+
+```
+./run-testfloat-tests.sh --with-board riscv-picorv32
+```
+
+NOTE: This script does not verify the results of the tests, it
+simply runs them. Each test produces an output file when it
+runs, and this output must be seperately verified by piping it
+into the `testfloat_ver` command with the appropriate flags.
+
 Tagging the tool chain
 ----------------------
 
