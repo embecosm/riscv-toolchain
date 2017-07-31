@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# Check we have verilator
-
-if ! test $(which verilator)
-then
-        echo "ERROR: verilator required for building the GDB Server"
-	exit 1
-fi
-
-
 TOOLCHAIN_DIR=$(cd "`dirname \"$0\"`"; pwd)
 TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
@@ -21,6 +12,8 @@ SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 DEBUG_BUILD=no
 BUILD_DIR=${TOP}/build
+PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
+RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 INSTALL_DIR=${TOP}/install
 VERILATOR_DIR=`pkg-config --variable=prefix verilator`
 JOBS=
@@ -33,16 +26,18 @@ function usage () {
 
     echo "${MSG}"
     echo
-    echo "Usage: ./build-all.sh [--build-dir <build_dir>]"
-    echo "                      [--install-dir <install_dir>]"
-    echo "                      [--jobs <count>] [--load <load>]"
-    echo "                      [--single-thread]"
-    echo "                      [--clean]"
-    echo "                      [--debug]"
-    echo "                      [--skip-gcc-stage-1]"
-    echo "                      [--with-target <target>]"
-    echo "                      [--with-arch <arch>]"
-    echo "                      [--with-abi <abi>]"
+    echo "Usage: ./build-tools.sh [--build-dir <build_dir>]"
+    echo "                        [--install-dir <install_dir>]"
+    echo "                        [--picorv32-build-dir <picorv32_build_dir>]"
+    echo "                        [--ri5cy-build-dir <ri5cy_build_dir>]"
+    echo "                        [--jobs <count>] [--load <load>]"
+    echo "                        [--single-thread]"
+    echo "                        [--clean]"
+    echo "                        [--debug]"
+    echo "                        [--skip-gcc-stage-1]"
+    echo "                        [--with-target <target>]"
+    echo "                        [--with-arch <arch>]"
+    echo "                        [--with-abi <abi>]"
     echo
     echo "Defaults:"
     echo "   --with-target riscv32-unknown-elf"
@@ -66,6 +61,16 @@ case ${opt} in
 	INSTALL_DIR=$(realpath -m $1)
 	;;
 
+    --picorv32-build-dir)
+	shift
+	PICORV32_BUILD_DIR=$(realpath -m $1)
+	;;
+
+    --ri5cy-build-dir)
+	shift
+	RI5CY_BUILD_DIR=$(realpath -m $1)
+	;;
+
     --jobs)
 	shift
 	JOBS=$1
@@ -82,30 +87,30 @@ case ${opt} in
 	;;
 
     --clean)
-        CLEAN_BUILD=yes
+	CLEAN_BUILD=yes
 	;;
 
     --debug)
-        DEBUG_BUILD=yes
-        ;;
+	DEBUG_BUILD=yes
+	;;
 
     --with-target)
-        shift
-        WITH_TARGET=$1
-        ;;
+	shift
+	WITH_TARGET=$1
+	;;
 
     --with-arch)
-        shift
-        WITH_ARCH=$1
-        ;;
+	shift
+	WITH_ARCH=$1
+	;;
 
     --with-abi)
-        shift
-        WITH_ABI=$1
-        ;;
+	shift
+	WITH_ABI=$1
+	;;
 
     ?*)
-        usage "Unknown argument $1"
+	usage "Unknown argument $1"
 	;;
 
     *)
@@ -116,25 +121,29 @@ do
     shift
 done
 
+set -u
+
 # ====================================================================
 
 TARGET_TRIPLET=${WITH_TARGET}
 
-echo "        Top: ${TOP}"
-echo "  Toolchain: ${TOOLCHAIN_DIR}"
-echo "     Target: ${TARGET_TRIPLET}"
-echo "       Arch: ${WITH_ARCH}"
-echo "        ABI: ${WITH_ABI}"
-echo "Debug build: ${DEBUG_BUILD}"
-echo "  Build Dir: ${BUILD_DIR}"
-echo "Install Dir: ${INSTALL_DIR}"
+echo "               Top: ${TOP}"
+echo "         Toolchain: ${TOOLCHAIN_DIR}"
+echo "            Target: ${TARGET_TRIPLET}"
+echo "              Arch: ${WITH_ARCH}"
+echo "               ABI: ${WITH_ABI}"
+echo "       Debug build: ${DEBUG_BUILD}"
+echo "         Build Dir: ${BUILD_DIR}"
+echo "PICORV32 Build Dir: ${PICORV32_BUILD_DIR}"
+echo "   RI5CY Build Dir: ${RI5CY_BUILD_DIR}"
+echo "       Install Dir: ${INSTALL_DIR}"
 
 if [ "x${CLEAN_BUILD}" = "xyes" ]
 then
     for T in `seq 5 -1 1`
     do
-        echo -ne "\rClean Build: yes (in ${T} seconds)"
-        sleep 1
+	echo -ne "\rClean Build: yes (in ${T} seconds)"
+	sleep 1
     done
     echo -e "\rClean Build: yes                           "
     rm -fr ${BUILD_DIR} ${INSTALL_DIR}
@@ -148,14 +157,24 @@ then
     export CXXFLAGS="-g3 -O0"
 fi
 
+if [ ! -e ${PICORV32_BUILD_DIR} ]
+then
+    echo "PICORV32 build directory does not exist"
+    exit 1
+fi
+if [ ! -e ${RI5CY_BUILD_DIR} ]
+then
+    echo "RI5CY build directory does not exist"
+    exit 1
+fi
+
+
 BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
 GDB_BUILD_DIR=${BUILD_DIR}/gdb
 GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage-1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
 DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
-PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
-RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
@@ -182,7 +201,7 @@ LOGFILE=${LOGDIR}/build-$(date +%F-%H%M).log
 
 echo "   Log file: ${LOGFILE}"
 echo "   Start at: "`date`
-echo "   Parellel: ${PARALLEL}"
+echo "   Parallel: ${PARALLEL}"
 echo ""
 
 rm -f ${LOGFILE}
@@ -200,123 +219,12 @@ fi
 
 # ====================================================================
 
-function msg ()
-{
-    echo "$1" | tee -a ${LOGFILE}
-}
-
-function error ()
-{
-    SCRIPT_END_TIME=`date +%s`
-    TIME_STR=`times_to_time_string ${SCRIPT_START_TIME} ${SCRIPT_END_TIME}`
-
-    echo "!! $1" | tee -a ${LOGFILE}
-    echo "All finished ${TIME_STR}." | tee -a ${LOGFILE}
-    echo ""
-    echo "See ${LOGFILE} for more details"
-
-    exit 1
-}
-
-function times_to_time_string ()
-{
-    local START=$1
-    local END=$2
-
-    local TIME_TAKEN=$((END - START))
-    local TIME_STR=""
-
-    if [ ${TIME_TAKEN} -gt 0 ]
-    then
-        local MINS=$((TIME_TAKEN / 60))
-        local SECS=$((TIME_TAKEN - (60 * MINS)))
-        local MIN_STR=""
-        local SEC_STR=""
-        if [ ${MINS} -gt 1 ]
-        then
-            MIN_STR=" ${MINS} minutes"
-        elif [ ${MINS} -eq 1 ]
-        then
-            MIN_STR=" ${MINS} minute"
-        fi
-        if [ ${SECS} -gt 1 ]
-        then
-            SEC_STR=" ${SECS} seconds"
-        elif [ ${SECS} -eq 1 ]
-        then
-            SEC_STR=" ${SECS} second"
-        fi
-
-        TIME_STR="in${MIN_STR}${SEC_STR}"
-    else
-        TIME_STR="instantly"
-    fi
-
-    echo "${TIME_STR}"
-}
-
-function job_start ()
-{
-    JOB_TITLE=$1
-    JOB_START_TIME=`date +%s`
-    echo "Starting: ${JOB_TITLE}" >> ${LOGFILE}
-    echo -n ${JOB_TITLE}"..."
-}
-
-function job_done ()
-{
-    local JOB_END_TIME=`date +%s`
-    local TIME_STR=`times_to_time_string ${JOB_START_TIME} ${JOB_END_TIME}`
-
-    echo "Finished ${TIME_STR}." >> ${LOGFILE}
-    echo -e "\r${JOB_TITLE} completed ${TIME_STR}."
-
-    JOB_TITLE=""
-    JOB_START_TIME=0
-}
-
-function mkdir_and_enter ()
-{
-    DIR=$1
-
-    if ! mkdir -p ${DIR} >> ${LOGFILE} 2>&1
-    then
-       error "Failed to create directory: ${DIR}"
-    fi
-
-    if ! cd ${DIR} >> ${LOGFILE} 2>&1
-    then
-       error "Failed to entry directory: ${DIR}"
-    fi
-}
-
-function enter_dir ()
-{
-    DIR=$1
-
-    if ! cd ${DIR} >> ${LOGFILE} 2>&1
-    then
-       error "Failed to entry directory: ${DIR}"
-    fi
-}
-
-
-function run_command ()
-{
-    echo "" >> ${LOGFILE}
-    echo "Current directory: ${PWD}" >> ${LOGFILE}
-    echo -n "Running: " >> ${LOGFILE}
-    for P in "$@"
-    do
-        V=`echo ${P} | sed -e 's/"/\\\\"/g'`
-        echo -n "\"${V}\" " >> ${LOGFILE}
-    done
-    echo "" >> ${LOGFILE}
-    echo "" >> ${LOGFILE}
-
-    "$@" >> ${LOGFILE} 2>&1
-    return $?
-}
+# Defines: msg, error, times_to_time_string, job_start, job_done,
+#          mkdir_and_enter, enter_dir, run_command
+#
+# Requires LOGFILE and SCRIPT_START_TIME environment variables to be
+# set.
+source common.sh
 
 # ====================================================================
 #                   Build and install binutils
@@ -599,60 +507,13 @@ job_done
 
 
 # ====================================================================
-#                Verilate PICORV32
+#             Build GDB Server for provided targets
 # ====================================================================
 
-job_start "Verilating PICORV32"
+echo "PICORV32 for GDBServer: ${PICORV32_BUILD_DIR}"
+echo "   RI5CY for GDBServer: ${RI5CY_BUILD_DIR}"
 
-rm -rf ${PICORV32_BUILD_DIR}
-
-mkdir_and_enter ${PICORV32_BUILD_DIR}
-
-if ! run_command cp -r ${TOP}/picorv32/scripts/gdbserver/* ${PICORV32_BUILD_DIR}
-then
-    error "Failed to copy files for PICORV32 build"
-fi
-
-if ! run_command make
-then
-    error "Failed to verilate PICORV32"
-fi
-
-job_done
-
-
-
-# ====================================================================
-#                Verilate RI5CY
-# ====================================================================
-
-job_start "Verilating RI5CY"
-
-rm -rf ${RI5CY_BUILD_DIR}
-
-mkdir_and_enter ${RI5CY_BUILD_DIR}
-
-if ! run_command cp -r ${TOP}/ri5cy/* ${RI5CY_BUILD_DIR}
-then
-    error "Failed to copy files for RI5CY build"
-fi
-
-enter_dir ${RI5CY_BUILD_DIR}/verilator-model
-
-if ! run_command make
-then
-    error "Failed to verilate R15CY"
-fi
-
-job_done
-
-
-
-# ====================================================================
-#             Build GDB Server for PICORV32 and Ri5cy
-# ====================================================================
-
-job_start "Building GDB Server for PICORV32 and Ri5cy"
+job_start "Building GDB Server for provided targets"
 
 cd ${TOP}/gdbserver
 
@@ -663,10 +524,17 @@ fi
 
 mkdir_and_enter ${GDBSERVER_BUILD_DIR}
 
-if ! run_command ${TOP}/gdbserver/configure \
-           --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
-           --prefix=${TOP}/install --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir --with-picorv32-topmodule=testbench \
-	   --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir --with-ri5cy-topmodule=top
+GDBSERVER_CONFIG_ARGS="\
+    --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
+    --prefix=${TOP}/install"
+GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+    --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
+    --with-ri5cy-topmodule=top"
+GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+    --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
+    --with-picorv32-topmodule=testbench"
+
+if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
 then
     error "Failed to configure GDB Server"
 fi

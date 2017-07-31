@@ -64,21 +64,39 @@ repository
 
 checks out the `mytag` tag on each branch.
 
-Building the tool chain
------------------------
+Building the targets
+--------------------
 
 NOTE: The device-tree-compiler package is required to build riscv-isa-sim
 (SPIKE) and verilator is required to build the PICORV32 GDB Server.
 
-To build a 32-bit riscv32i tool chain (binutils, gdb, gcc, newlib, SPIKE,
-etc.):
+The tool chain and the targets are built separately. The targets
+should be built first as the gdbserver needs to link against 
+the generated PICORV32 and RI5CY verilator models.
+
+To build the picorv32 and ri5cy verilator models:
 
 ```
-./build-all.sh
+./build-targets.sh
 ```
 
-To see the options for `build-all.sh`, use `./build-all.sh --help`. These
-include options for setting the architecture and ABI.
+There are optional arguments `--ri5cy-source` and `picorv32-source`
+which can be used to provide an alternative source directory to
+for the respective targets. By default it is assumed that the
+source is containing in `ri5cy` and `picorv32` directories in the
+directory above the toolchain.
+
+Building the tool chain
+-----------------------
+
+To build a 32-bit riscv32i tool chain (binutils, gdb, gcc, newlib, etc.):
+
+```
+./build-tools.sh
+```
+
+To see the options for `build-tools.sh`, use `./build-tools.sh --help`.
+These include options for setting the architecture and ABI.
 
 Building the ISA tests
 ----------------------
@@ -89,7 +107,8 @@ To build the ISA tests for the RISC-V
 ./build-isa-tests.sh
 ```
 
-To see the options for `build-all-isa.sh`, use `./build-all-isa.sh --help`.
+To see the options for `build-isa-tests.sh`, use
+`./build-isa-tests.sh --help`.
 
 Building testfloat
 ------------------
