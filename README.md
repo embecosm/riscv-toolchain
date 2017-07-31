@@ -67,8 +67,7 @@ checks out the `mytag` tag on each branch.
 Building the targets
 --------------------
 
-NOTE: The device-tree-compiler package is required to build riscv-isa-sim
-(SPIKE) and verilator is required to build the PICORV32 GDB Server.
+NOTE: verilator is required to build the PICOVR32 and RI5CY GDB Server
 
 The tool chain and the targets are built separately. The targets
 should be built first as the gdbserver needs to link against 
@@ -97,6 +96,23 @@ To build a 32-bit riscv32i tool chain (binutils, gdb, gcc, newlib, etc.):
 
 To see the options for `build-tools.sh`, use `./build-tools.sh --help`.
 These include options for setting the architecture and ABI.
+
+Building SPIKE
+--------------
+
+NOTE: The device-tree-compiler package is required to build riscv-isa-sim
+(SPIKE).
+NOTE: The tools should be built (eg by using the `build-tools.sh script),
+before building the simulator.
+
+To build spike for riscv32i :
+
+```
+./build-spike.sh
+```
+
+To see the options for `build-spike.sh`, use `./build-spike.sh --help`.
+These include options for setting the target and architecture.
 
 Building the ISA tests
 ----------------------
