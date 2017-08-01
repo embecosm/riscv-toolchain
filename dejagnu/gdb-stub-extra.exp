@@ -205,7 +205,7 @@ proc gdb_stub_ld { dest prog } {
 proc gdb_stub_start { dest } {
     global gdb_prompt
 
-    set exit_brnum [gdb_stub_add_breakpoint _exit]
+    set exit_brnum [gdb_stub_add_breakpoint exit]
     if { $exit_brnum == "undef" || [board_info $dest exists always_break_exit] } {
 	set exit_brnum [gdb_stub_add_breakpoint exit]
     }
