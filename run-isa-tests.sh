@@ -17,7 +17,7 @@ RESULTS_DIR=${TOP}/results
 INSTALL_DIR=${TOP}/install
 
 WITH_TARGET=riscv32-unknown-elf
-TARGET_BOARD=riscv_ri5cy
+TARGET_BOARD=riscv-ri5cy
 COMMENT="none"
 
 # ====================================================================
@@ -117,10 +117,10 @@ export RISCV_STACK_SIZE="4096"
 export RISCV_TEXT_SIZE="65536"
 
 case "${TARGET_BOARD}" in
-    riscv_picorv32)
+    riscv-picorv32)
 	C_OPT="picorv32"
 	;;
-    riscv_ri5cy)
+    riscv-ri5cy)
 	C_OPT="RI5CY"
 	;;
     *)
