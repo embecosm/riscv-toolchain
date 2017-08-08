@@ -263,6 +263,7 @@ if ! run_command ${TOP}/binutils/configure \
          --disable-gdb \
          --disable-libdecnumber \
          --disable-readline \
+         --enable-shared \
          --disable-sim
 then
     error "Failed to configure binutils"
