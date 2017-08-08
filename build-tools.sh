@@ -565,10 +565,19 @@ GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
 GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
     --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
     --with-picorv32-topmodule=testbench"
+GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+    --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/riscv32-unknown-elf/include \
+    --with-binutils-libdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/riscv32-unknown-elf/lib"
+
 
 if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
 then
     error "Failed to configure GDB Server"
+fi
+
+if ! run_command make clean
+then
+    error "Failed to make clean for GDB Server"
 fi
 
 if ! run_command make
