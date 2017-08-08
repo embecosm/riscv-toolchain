@@ -8,6 +8,7 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 WITH_TARGET=riscv32-unknown-elf
 WITH_ARCH=rv32i
 WITH_ABI=ilp32
+GDBSERVER_ONLY=no
 SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 DEBUG_BUILD=no
@@ -33,6 +34,7 @@ function usage () {
     echo "                        [--jobs <count>] [--load <load>]"
     echo "                        [--single-thread]"
     echo "                        [--clean]"
+    echo "                        [--gdbserver-only]"
     echo "                        [--debug]"
     echo "                        [--skip-gcc-stage-1]"
     echo "                        [--with-target <target>]"
@@ -88,6 +90,10 @@ case ${opt} in
 
     --clean)
 	CLEAN_BUILD=yes
+	;;
+
+    --gdbserver-only)
+	GDBSERVER_ONLY=yes
 	;;
 
     --debug)
@@ -162,6 +168,7 @@ then
     echo "PICORV32 build directory does not exist"
     exit 1
 fi
+
 if [ ! -e ${RI5CY_BUILD_DIR} ]
 then
     echo "RI5CY build directory does not exist"
@@ -230,6 +237,9 @@ source common.sh
 #                   Build and install binutils
 # ====================================================================
 
+if [ "x${GDBSERVER_ONLY}" = "xno" ]
+then
+
 job_start "Building binutils"
 
 mkdir_and_enter "${BINUTILS_BUILD_DIR}"
@@ -270,10 +280,14 @@ fi
 
 job_done
 
+fi
 
 # ====================================================================
 #                   Build and install GDB and sim
 # ====================================================================
+
+if [ "x${GDBSERVER_ONLY}" = "xno" ]
+then
 
 job_start "Building GDB and sim"
 
@@ -315,10 +329,14 @@ fi
 
 job_done
 
+fi
 
 # ====================================================================
 #                Build and Install GCC (Stage 1)
 # ====================================================================
+
+if [ "x${GDBSERVER_ONLY}" = "xno" ]
+then
 
 if [ "x${SKIP_GCC_STAGE_1}" = "xno" ]
 then
@@ -382,10 +400,14 @@ fi
 
 job_done
 
+fi
 
 # ====================================================================
 #                   Build and install newlib
 # ====================================================================
+
+if [ "x${GDBSERVER_ONLY}" = "xno" ]
+then
 
 job_start "Building newlib"
 
@@ -416,10 +438,14 @@ fi
 
 job_done
 
+fi
 
 # ====================================================================
 #                Build and Install GCC (Stage 2)
 # ====================================================================
+
+if [ "x${GDBSERVER_ONLY}" = "xno" ]
+then
 
 job_start "Building stage 2 GCC"
 
@@ -478,10 +504,14 @@ fi
 
 job_done
 
+fi
 
 # ====================================================================
 #                Build and Install DejaGNU
 # ====================================================================
+
+if [ "x${GDBSERVER_ONLY}" = "xno" ]
+then
 
 job_start "Building DejaGNU"
 
@@ -505,6 +535,7 @@ fi
 
 job_done
 
+fi
 
 # ====================================================================
 #             Build GDB Server for provided targets
