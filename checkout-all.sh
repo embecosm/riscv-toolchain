@@ -47,7 +47,7 @@ repos="binutils:master                          \
        gdb:riscv-next                           \
        newlib:bare-metal-hack                   \
        dejagnu:riscv-dejagnu-1.6                \
-       gdbserver:ri5cy                          \
+       gdbserver:master                         \
        picorv32:gdbserver                       \
        ri5cy:verilator-model                    \
        riscv-pk:master                          \
