@@ -283,6 +283,7 @@ proc gdb_stub_add_breakpoint { function args } {
 proc gdb_stub_wait { dest timeout } {
     global gdb_prompt
     global gdb_print_return_code
+    global expect_out
 
     # For some reason the breakpoint numbers don't always seem to be set. The
     # whole use of upvar seems a bit broken. So we catch and set defaults if
@@ -305,19 +306,19 @@ proc gdb_stub_wait { dest timeout } {
 	    # line in the output. If that source line contained 'exit', then
 	    # it would cause this case to be triggered.
 
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Breakpoint\[^\n\]*exit.*=0.*$gdb_prompt.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Breakpoint\[^\n\]*exit.*=0.*$gdb_prompt.*" $output {} output
 
 	    # Whether we pass or fail depends on the argument. Drop through,
 	    # so we can find it.
 	}
 	-re "Breakpoint $exit_brnum.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Breakpoint $exit_brnum.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Breakpoint $exit_brnum.*" $output {} output
 
 	    # Whether we pass or fail depends on the argument. Drop through,
 	    # so we can find it.
@@ -329,69 +330,69 @@ proc gdb_stub_wait { dest timeout } {
 	    # it would cause this case to be triggered.
 	    #
 
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Breakpoint\[^\n\]*exit.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Breakpoint\[^\n\]*exit.*" $output {} output
 
 	    # Whether we pass or fail depends on the argument. Drop through,
 	    # so we can find it.
 	}
 	-re "Breakpoint $abort_brnum.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Breakpoint $abort_brnum.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Breakpoint $abort_brnum.*" $output {} output
 
 	    gdb_stub_go_idle $dest
 	    return [list 1 $output]
 	}
 	-re "Breakpoint\[^\n\]*abort.*$gdb_prompt $" {
-            # We include \[^\n\]* in the above regexp, so that we don't match
-            # an occurence of 'abort' printed in the source line when a
-            # breakpoint is hit.
+	    # We include \[^\n\]* in the above regexp, so that we don't match
+	    # an occurence of 'abort' printed in the source line when a
+	    # breakpoint is hit.
 
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Breakpoint\[^\n\]*abort.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Breakpoint\[^\n\]*abort.*" $output {} output
 
 	    gdb_stub_go_idle $dest
 	    return [list 1 $output]
 	}
-        -re " EXIT code 0.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all " EXIT code 0.*" $output {} output
+	-re " EXIT code 0.*$gdb_prompt $" {
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all " EXIT code 0.*" $output {} output
 
-            gdb_stub_go_idle $dest
-            return [list 0 $output]
-        }
-        -re " EXIT code \[1-9]\[0-9]*.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all " EXIT code \[1-9\]\[0-9\]*.*" $output {} output
+	    gdb_stub_go_idle $dest
+	    return [list 0 $output]
+	}
+	-re " EXIT code \[1-9]\[0-9]*.*$gdb_prompt $" {
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all " EXIT code \[1-9\]\[0-9\]*.*" $output {} output
 
 	    # Surely this should be a fail? Change from the upstream
-            gdb_stub_go_idle $dest
-            return [list 1 $output]
-        }
-        -re " EXIT code 4242.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all " EXIT code 4242.*" $output {} output
+	    gdb_stub_go_idle $dest
+	    return [list 1 $output]
+	}
+	-re " EXIT code 4242.*$gdb_prompt $" {
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all " EXIT code 4242.*" $output {} output
 
-            gdb_stub_go_idle $dest
-            return [list 1 $output]
-        }
+	    gdb_stub_go_idle $dest
+	    return [list 1 $output]
+	}
 	-re "CPU time limit exceeded.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "CPU time limit exceeded.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "CPU time limit exceeded.*" $output {} output
 
 	    # This is a clean timeout, so should lead to UNRESOLVED, not
 	    # FAIL. Must go before the generic "Program received" which
@@ -400,38 +401,38 @@ proc gdb_stub_wait { dest timeout } {
 	    return [list -2 $output]
 	}
  	-re "Program received.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Program received.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Program received.*" $output {} output
 
 	    gdb_stub_go_idle $dest
 	    return [list 1 $output]
 	}
 	-re "Program exited.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Program exited.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Program exited.*" $output {} output
 
 	    gdb_stub_go_idle $dest
 	    return [list 1 $output]
 	}
 	-re "Remote connection closed.*$gdb_prompt $" {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "Remote connection closed.*" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "Remote connection closed.*" $output {} output
 
 	    remote_close $dest
 	    remote_reboot $dest
 	    return [list -1 $output]
 	}
 	timeout {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "$gdb_prompt\[^\n\]*$" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "$gdb_prompt\[^\n\]*$" $output {} output
 
 	    # This is a timeout, but not cleanly from the far end. So should
 	    # lead to UNRESOLVED, not FAIL, but we need close and reboot the
@@ -441,10 +442,10 @@ proc gdb_stub_wait { dest timeout } {
 	    return [list -2 $output]
 	}
 	default {
-            # If the target makes use of File-I/O, then there may be important
-            # test output printing to stdout
-            set output $expect_out(buffer)
-            regsub -all "$gdb_prompt\[^\n\]*$" $output {} output
+	    # If the target makes use of File-I/O, then there may be important
+	    # test output printing to stdout
+	    set output $expect_out(buffer)
+	    regsub -all "$gdb_prompt\[^\n\]*$" $output {} output
 
 	    verbose -log "Rebooting reason 3: unmatched output, default case\n"
 	    remote_close $dest
