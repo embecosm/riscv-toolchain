@@ -383,17 +383,17 @@ then
                --disable-nls \
                --enable-checking=yes
     then
-        error "Failed to configure GCC (stage 1)"
+	error "Failed to configure GCC (stage 1)"
     fi
 
     if ! run_command make ${PARALLEL} all-gcc
     then
-        error "Failed to build GCC (stage 1)"
+	error "Failed to build GCC (stage 1)"
     fi
 
     if ! run_command make ${PARALLEL} install-gcc
     then
-        error "Failed to install GCC (stage 1)"
+	error "Failed to install GCC (stage 1)"
     fi
 else
     job_start "Skipping stage 1 GCC"

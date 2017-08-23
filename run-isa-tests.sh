@@ -109,8 +109,6 @@ export DEJAGNU=${TOOLCHAIN_DIR}/site.exp
 # ====================================================================
 
 # Start gdbserver, setting and exporting any board parameters
-GDBSERVER_PID=
-export RISCV_NETPORT=51235
 export RISCV_TIMEOUT=10
 export RISCV_GDB_TIMEOUT=10
 export RISCV_STACK_SIZE="4096"
@@ -118,21 +116,14 @@ export RISCV_TEXT_SIZE="65536"
 
 case "${TARGET_BOARD}" in
     riscv-picorv32)
-	C_OPT="picorv32"
+	export RISCV_CORE=picorv32
 	;;
     riscv-ri5cy)
-	C_OPT="RI5CY"
+	export RISCV_CORE=ri5cy
 	;;
     *)
 esac
-
-ORIGINAL_TARGET_BOARD=${TARGET_BOARD}
 TARGET_BOARD=riscv-gdbserver
-
-echo ${INSTALL_DIR}/bin/riscv-gdbserver -c ${C_OPT} ${RISCV_NETPORT}
-${INSTALL_DIR}/bin/riscv-gdbserver -c ${C_OPT} ${RISCV_NETPORT} & pid=$!
-echo "Started GDB server on port ${RISCV_NETPORT} (process ${pid})"
-GDBSERVER_PID=$pid
 
 # ====================================================================
 
@@ -155,13 +146,5 @@ runtest isa.exp --target_board=${TARGET_BOARD}
 # 'testrun' is the default name as runtest was provided with no --tool arg
 cp ${RISCV_TESTS_BUILD_DIR}/testrun.log ${RESULTS_DIR}/isa.log
 cp ${RISCV_TESTS_BUILD_DIR}/testrun.sum ${RESULTS_DIR}/isa.sum
-
-# ====================================================================
-
-if [ ! -z "${GDBSERVER_PID}" ]
-then
-    echo "Killing off gdbserver (process ${GDBSERVER_PID})"
-    kill -9 ${GDBSERVER_PID} &>/dev/null
-fi
 
 # ====================================================================
