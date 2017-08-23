@@ -57,7 +57,7 @@ set_board_info gdb_protocol  "remote"
 set_board_info gdb,start_symbol "_start"
 set_board_info gdb,remote_timeout "$env(RISCV_TIMEOUT)"
 set_board_info use_gdb_stub 1
-set_board_info netport ":$env(RISCV_NETPORT)"
+set_board_info netport "| riscv-gdbserver -c $env(RISCV_CORE) --stdin"
 
 # GCC tool specific settings. Stack should generally be half the available
 # RAM, but the value is up to the caller. Although other boards set it, it is
