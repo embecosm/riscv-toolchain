@@ -431,7 +431,9 @@ proc gdb_stub_wait { dest timeout } {
 	timeout {
 	    # If the target makes use of File-I/O, then there may be important
 	    # test output printing to stdout
-	    set output $expect_out(buffer)
+	    if { [info exists expect_out(buffer)] } {
+		set output $expect_out(buffer)
+	    }
 	    regsub -all "$gdb_prompt\[^\n\]*$" $output {} output
 
 	    # This is a timeout, but not cleanly from the far end. So should
@@ -444,7 +446,9 @@ proc gdb_stub_wait { dest timeout } {
 	default {
 	    # If the target makes use of File-I/O, then there may be important
 	    # test output printing to stdout
-	    set output $expect_out(buffer)
+	    if { [info exists expect_out(buffer)] } {
+		set output $expect_out(buffer)
+	    }
 	    regsub -all "$gdb_prompt\[^\n\]*$" $output {} output
 
 	    verbose -log "Rebooting reason 3: unmatched output, default case\n"
