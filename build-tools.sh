@@ -5,21 +5,18 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 # ====================================================================
 
+WITH_TARGET=riscv32-unknown-elf
+WITH_ARCH=rv32i
+WITH_ABI=ilp32
 GDBSERVER_ONLY=no
 SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 DEBUG_BUILD=no
 BUILD_DIR=${TOP}/build
-VERILATOR_DIR=`pkg-config --variable=prefix verilator`
+PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
+RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 INSTALL_DIR=${TOP}/install
-
-# ====================================================================
-
-# These are deliberately left blank, defaults are filled in below as
-# appropriate.
-WITH_XLEN=
-WITH_ARCH=
-WITH_ABI=
+VERILATOR_DIR=`pkg-config --variable=prefix verilator`
 JOBS=
 LOAD=
 
@@ -32,49 +29,25 @@ function usage () {
     echo
     echo "Usage: ./build-tools.sh [--build-dir <build_dir>]"
     echo "                        [--install-dir <install_dir>]"
-    echo "                        [--with-xlen <xlen>]"
-    echo "                        [--clean]"
-    echo "                        [--debug]"
     echo "                        [--picorv32-build-dir <picorv32_build_dir>]"
     echo "                        [--ri5cy-build-dir <ri5cy_build_dir>]"
     echo "                        [--jobs <count>] [--load <load>]"
     echo "                        [--single-thread]"
+    echo "                        [--clean]"
     echo "                        [--gdbserver-only]"
+    echo "                        [--debug]"
     echo "                        [--skip-gcc-stage-1]"
     echo "                        [--with-target <target>]"
     echo "                        [--with-arch <arch>]"
     echo "                        [--with-abi <abi>]"
     echo
-    echo "--with-xlen:"
-    echo "        Choose between 32 or 64.  Default is 32."
-    echo ""
-    echo "--with-target:"
-    echo "        Defaults are riscv32-unknown-elf or riscv64-unknown-elf"
-    echo "        depending on the value of --with-xlen."
-    echo ""
-    echo "--with-arch:"
-    echo "        Defaults are rv32im or rv64im dependind on the value"
-    echo "        of --with-xlen.  Add the 'c' flag for compressed, 'f'"
-    echo "        for single precision floating point, and 'd' for double"
-    echo "        precision floating point support.  When specifiying, don't"
-    echo "        include the 'rv32' or 'rv64' prefix, this will be added"
-    echo "        automatically based on the value passed in --with-xlen."
-    echo ""
-    echo "--with-abi:"
-    echo "        Only pass this if you need to override the default that"
-    echo "        this script selects for you.  The selected ABI will be"
-    echo "        ilp32 or lp64 for 32 or 64 xlen respectively.  The ABI"
-    echo "        will be extended with the 'd' or 'f' modifier if 'd' or"
-    echo "        'f' is included in the --with-arch value.  The 'd' is"
-    echo "        preferred over 'f' if both are present in the arch value"
+    echo "Defaults:"
+    echo "   --with-target riscv32-unknown-elf"
+    echo "   --with-arch rv32ima"
+    echo "   --with-abi ilp32"
 
     exit 1
 }
-
-XLEN_SPECIFIED=no
-ARCH_SPECIFIED=no
-ABI_SPECIFIED=no
-TARGET_SPECIFIED=no
 
 # Parse options
 until
@@ -127,28 +100,19 @@ case ${opt} in
 	DEBUG_BUILD=yes
 	;;
 
-    --with-xlen)
-	shift
-	WITH_XLEN=$1
-        XLEN_SPECIFIED=yes
-	;;
-
     --with-target)
 	shift
-	TARGET_TRIPLET=$1
-        TARGET_SPECIFIED=yes
+	WITH_TARGET=$1
 	;;
 
     --with-arch)
 	shift
 	WITH_ARCH=$1
-        ARCH_SPECIFIED=yes
 	;;
 
     --with-abi)
 	shift
 	WITH_ABI=$1
-        ABI_SPECIFIED=yes
 	;;
 
     ?*)
@@ -166,99 +130,12 @@ done
 set -u
 
 # ====================================================================
-# Select suitable defaults based on the value of --with-xlen
 
-if [ "${XLEN_SPECIFIED}" == "no" ]
-then
-    WITH_XLEN=32
-fi
-
-if [ "${ARCH_SPECIFIED}" == "no" ]
-then
-    WITH_ARCH=im
-else
-    case ${WITH_ARCH} in
-        rv32* | rv64*)
-            echo "Don't include 'rv32' or 'rv64' prefix in --with-arch value ${WITH_ARCH}"
-            exit 1
-            ;;
-    esac
-fi
-
-if [ "${ABI_SPECIFIED}" == "no" ]
-then
-    # The base ABI, matching 32 or 64 bit.
-    if [ "${WITH_XLEN}" == "32" ]
-    then
-        WITH_ABI="ilp32"
-    else
-        WITH_ABI="lp64"
-    fi
-
-    # Now, any floating point extensions to the ABI.
-    case ${WITH_ARCH} in
-        *d*)
-            WITH_ABI="${WITH_ABI}d"
-            ;;
-        *f*)
-            WITH_ABI="${WITH_ABI}f"
-            ;;
-    esac
-fi
-
-if [ "${TARGET_SPECIFIED}" == "no" ]
-then
-    TARGET_TRIPLET=riscv${WITH_XLEN}-unknown-elf
-fi
-
-# ====================================================================
-
-# Check that we have a valid VERILATOR_DIR value, otherwise we'll not
-# spot until we try to build verilator.
-if [ -z "${VERILATOR_DIR}" -o ! -d "${VERILATOR_DIR}" ]
-then
-    echo "Failed to get header directory from verilator"
-    exit 1
-fi
-
-# ====================================================================
-
-WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
-
-# ====================================================================
-
-PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
-RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
-BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
-GDB_BUILD_DIR=${BUILD_DIR}/gdb
-GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage1
-GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage2
-NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
-GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
-DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
-
-INSTALL_PREFIX_DIR=${INSTALL_DIR}
-INSTALL_SYSCONF_DIR=${INSTALL_DIR}/etc
-INSTALL_LOCALSTATE_DIR=${INSTALL_DIR}/var
-
-SYSROOT_DIR=${INSTALL_DIR}/${TARGET_TRIPLET}/sysroot
-SYSROOT_HEADER_DIR=${SYSROOT_DIR}/usr
-
-# Default parallellism
-processor_count="`(echo processor; cat /proc/cpuinfo 2>/dev/null echo processor) \
-           | grep -c processor`"
-if [ -z "${JOBS}" ]; then JOBS=${processor_count}; fi
-if [ -z "${LOAD}" ]; then LOAD=${processor_count}; fi
-PARALLEL="-j ${JOBS} -l ${LOAD}"
-
-INSTALL_DIR=${INSTALL_PREFIX_DIR}
-
-# ====================================================================
+TARGET_TRIPLET=${WITH_TARGET}
 
 echo "               Top: ${TOP}"
 echo "         Toolchain: ${TOOLCHAIN_DIR}"
 echo "            Target: ${TARGET_TRIPLET}"
-echo "              Xlen: ${WITH_XLEN}"
 echo "              Arch: ${WITH_ARCH}"
 echo "               ABI: ${WITH_ABI}"
 echo "       Debug build: ${DEBUG_BUILD}"
@@ -271,20 +148,13 @@ if [ "x${CLEAN_BUILD}" = "xyes" ]
 then
     for T in `seq 5 -1 1`
     do
-	echo -ne "\r       Clean Build: yes (in ${T} seconds)"
+	echo -ne "\rClean Build: yes (in ${T} seconds)"
 	sleep 1
     done
-    echo -e "\r       Clean Build: yes                           "
-    if [ "x${GDBSERVER_ONLY}" = "xno" ]
-    then
-        rm -fr ${BINUTILS_BUILD_DIR} ${GDB_BUILD_DIR} \
-           ${GCC_STAGE_1_BUILD_DIR} ${NEWLIB_BUILD_DIR} \
-           ${GCC_STAGE_2_BUILD_DIR} ${GDBSERVER_BUILD_DIR}
-    else
-        rm -fr ${GDBSERVER_BUILD_DIR}
-    fi
+    echo -e "\rClean Build: yes                           "
+    rm -fr ${BUILD_DIR} ${INSTALL_DIR}
 else
-    echo "       Clean Build: no"
+    echo "Clean Build: no"
 fi
 
 if [ "x${DEBUG_BUILD}" = "xyes" ]
@@ -305,7 +175,27 @@ then
     exit 1
 fi
 
-# ====================================================================
+
+BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
+GDB_BUILD_DIR=${BUILD_DIR}/gdb
+GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage-1
+GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
+NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
+GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
+
+INSTALL_PREFIX_DIR=${INSTALL_DIR}
+INSTALL_SYSCONF_DIR=${INSTALL_DIR}/etc
+INSTALL_LOCALSTATE_DIR=${INSTALL_DIR}/var
+
+SYSROOT_DIR=${INSTALL_DIR}/${TARGET_TRIPLET}/sysroot
+SYSROOT_HEADER_DIR=${SYSROOT_DIR}/usr
+
+# Default parallellism
+processor_count="`(echo processor; cat /proc/cpuinfo 2>/dev/null echo processor) \
+           | grep -c processor`"
+if [ -z "${JOBS}" ]; then JOBS=${processor_count}; fi
+if [ -z "${LOAD}" ]; then LOAD=${processor_count}; fi
+PARALLEL="-j ${JOBS} -l ${LOAD}"
 
 JOB_START_TIME=
 JOB_TITLE=
@@ -315,9 +205,9 @@ SCRIPT_START_TIME=`date +%s`
 LOGDIR=${TOP}/logs
 LOGFILE=${LOGDIR}/build-$(date +%F-%H%M).log
 
-echo "          Log file: ${LOGFILE}"
-echo "          Start at: "`date`
-echo "          Parallel: ${PARALLEL}"
+echo "   Log file: ${LOGFILE}"
+echo "   Start at: "`date`
+echo "   Parallel: ${PARALLEL}"
 echo ""
 
 rm -f ${LOGFILE}
@@ -341,28 +231,6 @@ fi
 # Requires LOGFILE and SCRIPT_START_TIME environment variables to be
 # set.
 source common.sh
-
-# ====================================================================
-#                    Locations of all the source
-# ====================================================================
-
-BINUTILS_SOURCE_DIR=${TOP}/binutils
-GDB_SOURCE_DIR=${TOP}/gdb
-GCC_SOURCE_DIR=${TOP}/gcc
-NEWLIB_SOURCE_DIR=${TOP}/newlib
-GDBSERVER_SOURCE_DIR=${TOP}/gdbserver
-
-# ====================================================================
-#                Log git versions into the build log
-# ====================================================================
-
-job_start "Writing git versions to log file"
-log_git_versions binutils "${BINUTILS_SOURCE_DIR}" \
-                 gdb "${GDB_SOURCE_DIR}" \
-                 gcc "${GCC_SOURCE_DIR}" \
-                 newlib "${NEWLIB_SOURCE_DIR}" \
-                 gdbserver "${GDBSERVER_SOURCE_DIR}"
-job_done
 
 # ====================================================================
 #                   Build and install binutils
@@ -624,12 +492,12 @@ then
     error "Failed to configure GCC (stage 2)"
 fi
 
-if ! run_command make ${PARALLEL} all
+if ! run_command make ${PARALLEL} all-gcc all-target-libgcc
 then
     error "Failed to build GCC (stage 2)"
 fi
 
-if ! run_command make ${PARALLEL} install
+if ! run_command make ${PARALLEL} install-gcc install-target-libgcc
 then
     error "Failed to install GCC (stage 2)"
 fi
@@ -696,10 +564,6 @@ GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
 GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
     --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
     --with-picorv32-topmodule=testbench"
-<<<<<<< HEAD
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-=======
->>>>>>> Use TARGET_TRIPLET for binutils dirs
     --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/include \
     --with-binutils-libdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/lib"
 
@@ -731,4 +595,6 @@ job_done
 #                           Finished
 # ====================================================================
 
-all_finished
+SCRIPT_END_TIME=`date +%s`
+TIME_STR=`times_to_time_string ${SCRIPT_START_TIME} ${SCRIPT_END_TIME}`
+echo "All finished ${TIME_STR}." | tee -a ${LOGFILE}

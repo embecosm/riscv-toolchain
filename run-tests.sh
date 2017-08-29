@@ -128,7 +128,6 @@ export PATH=${INSTALL_DIR}/bin:$PATH
 # ====================================================================
 
 # So that dejagnu can find the correct baseboard file (e.g. riscv-spike.exp)
-export DEJAGNULIBS=${TOP}/dejagnu
 export DEJAGNU=${TOOLCHAIN_DIR}/site.exp
 
 # ====================================================================
