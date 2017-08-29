@@ -97,6 +97,12 @@ To build a 32-bit riscv32i tool chain (binutils, gdb, gcc, newlib, etc.):
 To see the options for `build-tools.sh`, use `./build-tools.sh --help`.
 These include options for setting the architecture and ABI.
 
+To build a 64-bit riscv64i tool chain, use:
+
+```
+./build-tools.sh --with-xlen 64 --with arch i --with-abi lp64
+```
+
 Building SPIKE
 --------------
 
@@ -149,6 +155,11 @@ To run with the GDB simulator:
 To run with the GDB Server for RI5CY:
 ```
 ./run-tests.sh --with-board riscv-ri5cy
+```
+
+To run with the GDB server for 64-bit RI5CY:
+```
+./run-tests.sh --with-board riscv-ri5cy --with-xlen 64
 ```
 
 To run with the GDB Server for PICORV32:

@@ -5,9 +5,9 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 # ====================================================================
 
-WITH_TARGET=riscv32-unknown-elf
-WITH_ARCH=rv32i
-WITH_ABI=ilp32
+WITH_XLEN=32
+WITH_ARCH=i
+WITH_ABI=ilp
 GDBSERVER_ONLY=no
 SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
@@ -37,17 +37,21 @@ function usage () {
     echo "                        [--gdbserver-only]"
     echo "                        [--debug]"
     echo "                        [--skip-gcc-stage-1]"
-    echo "                        [--with-target <target>]"
+    echo "                        [--with-xlen <xlen>]"
     echo "                        [--with-arch <arch>]"
     echo "                        [--with-abi <abi>]"
     echo
     echo "Defaults:"
-    echo "   --with-target riscv32-unknown-elf"
-    echo "   --with-arch rv32ima"
-    echo "   --with-abi ilp32"
+    echo "   --with-xlen 32"
+    echo "   --with-arch ima"
+    echo "   --with-abi ilp"
 
     exit 1
 }
+
+XLEN_SPECIFIED=no
+ARCH_SPECIFIED=no
+ABI_SPECIFIED=no
 
 # Parse options
 until
@@ -100,19 +104,22 @@ case ${opt} in
 	DEBUG_BUILD=yes
 	;;
 
-    --with-target)
+    --with-xlen)
 	shift
-	WITH_TARGET=$1
+	WITH_XLEN=$1
+        XLEN_SPECIFIED=yes
 	;;
 
     --with-arch)
 	shift
 	WITH_ARCH=$1
+        ARCH_SPECIFIED=yes
 	;;
 
     --with-abi)
 	shift
 	WITH_ABI=$1
+        ABI_SPECIFIED=yes
 	;;
 
     ?*)
@@ -129,9 +136,18 @@ done
 
 set -u
 
+if [ "${ARCH_SPECIFIED}" == "yes" ] || [ "${XLEN_SPECIFIED}" == "yes" ] || [ "${ABI_SPECIFIED}" == "yes" ]; then
+  if [ "${ARCH_SPECIFIED}" == "no" ] || [ "${XLEN_SPECIFIED}" == "no" ] || [ "${ABI_SPECIFIED}" == "no" ]; then
+    echo "If specifying any of XLEN, ARCH, or ABI, then all three must be specified"
+    exit 1
+  fi
+fi
+
 # ====================================================================
 
-TARGET_TRIPLET=${WITH_TARGET}
+TARGET_TRIPLET=riscv${WITH_XLEN}-unknown-elf
+WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
+WITH_ABI=${WITH_ABI}${WITH_XLEN}
 
 echo "               Top: ${TOP}"
 echo "         Toolchain: ${TOOLCHAIN_DIR}"

@@ -12,7 +12,7 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 # ====================================================================
 
-WITH_TARGET=riscv32-unknown-elf
+WITH_XLEN=32
 BUILD_DIR=${TOP}/build
 RESULTS_DIR=${TOP}/results
 INSTALL_DIR=${TOP}/install
@@ -51,9 +51,9 @@ case ${opt} in
 	LOAD=$1
 	;;
 
-    --with-target)
+    --with-xlen)
 	shift
-	WITH_TARGET=$1
+	WITH_XLEN=$1
 	;;
 
     --with-board)
@@ -81,7 +81,7 @@ case ${opt} in
 	echo "                      [--install-dir <dir>]"
 	echo "                      [--results-dir <dir>]"
 	echo "                      [--jobs <count>] [--load <load>]"
-	echo "                      [--with-target <triplet>]"
+	echo "                      [--with-xlen xlen]"
 	echo "                      [--with-board <board>]"
 	echo "                      [--test-subset <string>]"
 	echo "                      [--tool gcc | gdb]"
@@ -146,6 +146,7 @@ case "${TARGET_BOARD}" in
 	export RISCV_GDB_TIMEOUT=10
 	export RISCV_STACK_SIZE="4096"
 	export RISCV_TEXT_SIZE="65536"
+        export RISCV_XLEN=${WITH_XLEN}
 
 	if [ "${TARGET_BOARD}" == "riscv-ri5cy" ]; then
 	    export RISCV_CORE=ri5cy
@@ -157,6 +158,8 @@ case "${TARGET_BOARD}" in
     *)
 	;;
 esac
+
+WITH_TARGET=riscv${WITH_XLEN}-unknown-elf
 
 # ====================================================================
 
