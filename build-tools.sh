@@ -181,7 +181,6 @@ GDB_BUILD_DIR=${BUILD_DIR}/gdb
 GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage-1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
-DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
 GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
@@ -501,37 +500,6 @@ fi
 if ! run_command make ${PARALLEL} install-gcc install-target-libgcc
 then
     error "Failed to install GCC (stage 2)"
-fi
-
-job_done
-
-fi
-
-# ====================================================================
-#                Build and Install DejaGNU
-# ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
-
-job_start "Building DejaGNU"
-
-mkdir_and_enter ${DEJAGNU_BUILD_DIR}
-
-if ! run_command ${TOP}/dejagnu/configure \
-           --prefix="${INSTALL_PREFIX_DIR}"
-then
-    error "Failed to configure DejaGNU"
-fi
-
-if ! run_command make
-then
-    error "Failed to build DejaGNU"
-fi
-
-if ! run_command make install
-then
-    error "Failed to install DejaGNU"
 fi
 
 job_done
