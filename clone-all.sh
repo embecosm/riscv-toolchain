@@ -65,8 +65,6 @@ git clone -o ${EM} ${BASE_URL}/riscv-gdb.git gdb
 git clone -o ${EM} ${BASE_URL}/riscv-newlib.git newlib
 
 # now get those for testing/executing
-git clone -o ${EM} ${BASE_URL}/riscv-dejagnu.git dejagnu
-
 git clone -o ${EM} ${BASE_URL}/riscv-gdbserver.git gdbserver
 git clone -o ${EM} ${BASE_URL}/picorv32.git picorv32
 git clone -o ${EM} ${BASE_URL}/ri5cy.git ri5cy
