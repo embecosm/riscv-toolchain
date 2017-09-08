@@ -77,12 +77,15 @@ Running the GCC regression test suite
 
 The GCC regression tests can be run from the toolchain directory either with:
 
+```
 ./run-tests.sh --with-board riscv-picorv32 --tool gcc
+```
 
 or
 
+```
 ./run-tests.sh --with-board riscv-ri5cy --tool gcc
-
+```
 
 depending on which core you'd like to run the tests.
 
