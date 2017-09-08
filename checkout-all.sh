@@ -48,7 +48,7 @@ repos="binutils:master                          \
        newlib:bare-metal-hack                   \
        dejagnu:riscv-dejagnu-1.6                \
        gdbserver:orconf                         \
-       picorv32:gdbserver                       \
+       picorv32:orconf                          \
        ri5cy:orconf                             \
        riscv-pk:master                          \
        riscv-fesvr:master                       \
