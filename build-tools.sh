@@ -548,7 +548,7 @@ GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
     --with-ri5cy-topmodule=top"
 GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
     --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
-    --with-picorv32-topmodule=testbench"
+    --with-picorv32-topmodule=testbench \
     --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/include \
     --with-binutils-libdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/lib"
 

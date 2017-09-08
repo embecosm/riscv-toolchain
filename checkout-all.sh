@@ -53,7 +53,7 @@ repos="binutils:master                          \
        riscv-pk:master                          \
        riscv-fesvr:master                       \
        riscv-isa-sim:master                     \
-       beebs:picorv32                           \
+       beebs:orconf                             \
        riscv-tests:master                       \
        berkeley-softfloat-3:master              \
        berkeley-testfloat-3:master"
