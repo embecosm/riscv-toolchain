@@ -5,18 +5,19 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 # ====================================================================
 
-WITH_TARGET=riscv32-unknown-elf
-WITH_ARCH=rv32i
-WITH_ABI=ilp32
-GDBSERVER_ONLY=no
-SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 DEBUG_BUILD=no
 BUILD_DIR=${TOP}/build
-PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
-RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 INSTALL_DIR=${TOP}/install
-VERILATOR_DIR=`pkg-config --variable=prefix verilator`
+
+# ====================================================================
+
+# These are deliberately left blank, defaults are filled in below as
+# appropriate.
+
+WITH_XLEN=
+WITH_ARCH=
+WITH_ABI=
 JOBS=
 LOAD=
 
@@ -29,25 +30,45 @@ function usage () {
     echo
     echo "Usage: ./build-tools.sh [--build-dir <build_dir>]"
     echo "                        [--install-dir <install_dir>]"
-    echo "                        [--picorv32-build-dir <picorv32_build_dir>]"
-    echo "                        [--ri5cy-build-dir <ri5cy_build_dir>]"
     echo "                        [--jobs <count>] [--load <load>]"
     echo "                        [--single-thread]"
     echo "                        [--clean]"
-    echo "                        [--gdbserver-only]"
     echo "                        [--debug]"
-    echo "                        [--skip-gcc-stage-1]"
+    echo "                        [--with-xlen <xlen>]"
     echo "                        [--with-target <target>]"
     echo "                        [--with-arch <arch>]"
     echo "                        [--with-abi <abi>]"
     echo
-    echo "Defaults:"
-    echo "   --with-target riscv32-unknown-elf"
-    echo "   --with-arch rv32ima"
-    echo "   --with-abi ilp32"
+    echo "--with-xlen:"
+    echo "        Choose between 32 or 64.  Default is 32."
+    echo ""
+    echo "--with-target:"
+    echo "        Defaults are riscv32-unknown-elf or riscv64-unknown-elf"
+    echo "        depending on the value of --with-xlen."
+    echo ""
+    echo "--with-arch:"
+    echo "        Defaults are rv32im or rv64im dependind on the value"
+    echo "        of --with-xlen.  Add the 'c' flag for compressed, 'f'"
+    echo "        for single precision floating point, and 'd' for double"
+    echo "        precision floating point support.  When specifiying, don't"
+    echo "        include the 'rv32' or 'rv64' prefix, this will be added"
+    echo "        automatically based on the value passed in --with-xlen."
+    echo ""
+    echo "--with-abi:"
+    echo "        Only pass this if you need to override the default that"
+    echo "        this script selects for you.  The selected ABI will be"
+    echo "        ilp32 or lp64 for 32 or 64 xlen respectively.  The ABI"
+    echo "        will be extended with the 'd' or 'f' modifier if 'd' or"
+    echo "        'f' is included in the --with-arch value.  The 'd' is"
+    echo "        preferred over 'f' if both are present in the arch value"
 
     exit 1
 }
+
+XLEN_SPECIFIED=no
+ARCH_SPECIFIED=no
+ABI_SPECIFIED=no
+TARGET_SPECIFIED=no
 
 # Parse options
 until
@@ -61,16 +82,6 @@ case ${opt} in
     --install-dir)
 	shift
 	INSTALL_DIR=$(realpath -m $1)
-	;;
-
-    --picorv32-build-dir)
-	shift
-	PICORV32_BUILD_DIR=$(realpath -m $1)
-	;;
-
-    --ri5cy-build-dir)
-	shift
-	RI5CY_BUILD_DIR=$(realpath -m $1)
 	;;
 
     --jobs)
@@ -92,27 +103,32 @@ case ${opt} in
 	CLEAN_BUILD=yes
 	;;
 
-    --gdbserver-only)
-	GDBSERVER_ONLY=yes
-	;;
-
     --debug)
 	DEBUG_BUILD=yes
 	;;
 
+    --with-xlen)
+	shift
+	WITH_XLEN=$1
+        XLEN_SPECIFIED=yes
+	;;
+
     --with-target)
 	shift
-	WITH_TARGET=$1
+	TARGET_TRIPLET=$1
+        TARGET_SPECIFIED=yes
 	;;
 
     --with-arch)
 	shift
 	WITH_ARCH=$1
+        ARCH_SPECIFIED=yes
 	;;
 
     --with-abi)
 	shift
 	WITH_ABI=$1
+        ABI_SPECIFIED=yes
 	;;
 
     ?*)
@@ -130,18 +146,63 @@ done
 set -u
 
 # ====================================================================
+# Select suitable defaults based on the value of --with-xlen
 
-TARGET_TRIPLET=${WITH_TARGET}
+if [ "${XLEN_SPECIFIED}" == "no" ]
+then
+    WITH_XLEN=32
+fi
+
+if [ "${ARCH_SPECIFIED}" == "no" ]
+then
+    WITH_ARCH=im
+else
+    case ${WITH_ARCH} in
+        rv32* | rv64*)
+            echo "Don't include 'rv32' or 'rv64' prefix in --with-arch value ${WITH_ARCH}"
+            exit 1
+            ;;
+    esac
+fi
+
+if [ "${ABI_SPECIFIED}" == "no" ]
+then
+    # The base ABI, matching 32 or 64 bit.
+    if [ "${WITH_XLEN}" == "32" ]
+    then
+        WITH_ABI="ilp32"
+    else
+        WITH_ABI="lp64"
+    fi
+
+    # Now, any floating point extensions to the ABI.
+    case ${WITH_ARCH} in
+        *d*)
+            WITH_ABI="${WITH_ABI}d"
+            ;;
+        *f*)
+            WITH_ABI="${WITH_ABI}f"
+            ;;
+    esac
+fi
+
+if [ "${TARGET_SPECIFIED}" == "no" ]
+then
+    TARGET_TRIPLET=riscv${WITH_XLEN}-unknown-elf
+fi
+
+WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
+
+# ====================================================================
 
 echo "               Top: ${TOP}"
 echo "         Toolchain: ${TOOLCHAIN_DIR}"
 echo "            Target: ${TARGET_TRIPLET}"
+echo "              Xlen: ${WITH_XLEN}"
 echo "              Arch: ${WITH_ARCH}"
 echo "               ABI: ${WITH_ABI}"
 echo "       Debug build: ${DEBUG_BUILD}"
 echo "         Build Dir: ${BUILD_DIR}"
-echo "PICORV32 Build Dir: ${PICORV32_BUILD_DIR}"
-echo "   RI5CY Build Dir: ${RI5CY_BUILD_DIR}"
 echo "       Install Dir: ${INSTALL_DIR}"
 
 if [ "x${CLEAN_BUILD}" = "xyes" ]
@@ -163,26 +224,14 @@ then
     export CXXFLAGS="-g3 -O0"
 fi
 
-if [ ! -e ${PICORV32_BUILD_DIR} ]
-then
-    echo "PICORV32 build directory does not exist"
-    exit 1
-fi
-
-if [ ! -e ${RI5CY_BUILD_DIR} ]
-then
-    echo "RI5CY build directory does not exist"
-    exit 1
-fi
-
-
-BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
-GDB_BUILD_DIR=${BUILD_DIR}/gdb
+BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils-gdb
 GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage-1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
+GCC_NATIVE_BUILD_DIR=${BUILD_DIR}/gcc-native
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
-DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
-GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
+FESVR_BUILD_DIR=${BUILD_DIR}/riscv-fesvr
+PK_BUILD_DIR=${BUILD_DIR}/riscv-pk
+SPIKE_BUILD_DIR=${BUILD_DIR}/riscv-isa-sim
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
 INSTALL_SYSCONF_DIR=${INSTALL_DIR}/etc
@@ -234,17 +283,14 @@ fi
 source common.sh
 
 # ====================================================================
-#                   Build and install binutils
+#                   Build and install binutils and GDB
 # ====================================================================
 
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
-
-job_start "Building binutils"
+job_start "Building binutils and GDB"
 
 mkdir_and_enter "${BINUTILS_BUILD_DIR}"
 
-if ! run_command ${TOP}/binutils/configure \
+if ! run_command ${TOP}/binutils-gdb/configure \
          --prefix=${INSTALL_PREFIX_DIR} \
          --sysconfdir=${INSTALL_SYSCONF_DIR} \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
@@ -260,155 +306,91 @@ if ! run_command ${TOP}/binutils/configure \
          --with-sysroot=${SYSROOT_DIR} \
          --enable-poison-system-directories \
          --disable-tls \
-         --disable-gdb \
          --disable-libdecnumber \
          --disable-readline \
          --enable-shared \
          --disable-sim
 then
-    error "Failed to configure binutils"
+    error "Failed to configure binutils and GDB"
 fi
 
 if ! run_command make ${PARALLEL}
 then
-    error "Failed to build binutils"
+    error "Failed to build binutils and GDB"
 fi
 
 if ! run_command make ${PARALLEL} install
 then
-    error "Failed to install binutils"
+    error "Failed to install binutils and GDB"
 fi
 
 job_done
 
-fi
-
-# ====================================================================
-#                   Build and install GDB and sim
-# ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
-
-job_start "Building GDB and sim"
-
-mkdir_and_enter "${GDB_BUILD_DIR}"
-
-if ! run_command ${TOP}/gdb/configure \
-         --prefix=${INSTALL_PREFIX_DIR} \
-         --sysconfdir=${INSTALL_SYSCONF_DIR} \
-         --localstatedir=${INSTALL_LOCALSTATE_DIR} \
-         --disable-gtk-doc \
-         --disable-gtk-doc-html \
-         --disable-doc \
-         --disable-docs \
-         --disable-documentation \
-         --with-xmlto=no \
-         --with-fop=no \
-         --disable-multilib \
-         --target=${TARGET_TRIPLET} \
-         --with-sysroot=${SYSROOT_DIR} \
-         --enable-poison-system-directories \
-         --disable-tls \
-         --disable-gprof \
-         --disable-ld \
-         --disable-gas \
-         --disable-binutils
-then
-    error "Failed to configure GDB and sim"
-fi
-
-if ! run_command make ${PARALLEL}
-then
-    error "Failed to build GDB and sim"
-fi
-
-if ! run_command make ${PARALLEL} install
-then
-    error "Failed to install GDB and sim"
-fi
-
-job_done
-
-fi
 
 # ====================================================================
 #                Build and Install GCC (Stage 1)
 # ====================================================================
 
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
+job_start "Building stage 1 GCC"
+
+mkdir_and_enter ${GCC_STAGE_1_BUILD_DIR}
+
+if ! run_command ${TOP}/gcc/configure \
+           --prefix="${INSTALL_PREFIX_DIR}" \
+           --sysconfdir="${INSTALL_SYSCONF_DIR}" \
+           --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
+           --disable-shared \
+           --disable-static \
+           --disable-gtk-doc \
+           --disable-gtk-doc-html \
+           --disable-doc \
+           --disable-docs \
+           --disable-documentation \
+           --with-xmlto=no \
+           --with-fop=no \
+           --target=${TARGET_TRIPLET} \
+           --with-sysroot=${SYSROOT_DIR} \
+           --disable-__cxa_atexit \
+           --with-gnu-ld \
+           --disable-libssp \
+           --disable-multilib \
+           --enable-target-optspace \
+           --disable-libsanitizer \
+           --disable-tls \
+           --disable-libmudflap \
+           --disable-threads \
+           --disable-libquadmath \
+           --disable-libgomp \
+           --without-isl \
+           --without-cloog \
+           --disable-decimal-float \
+           --with-arch=${WITH_ARCH} \
+           --with-abi=${WITH_ABI} \
+           --enable-languages=c \
+           --without-headers \
+           --with-newlib \
+           --disable-largefile \
+           --disable-nls \
+           --enable-checking=yes
 then
+    error "Failed to configure GCC (stage 1)"
+fi
 
-if [ "x${SKIP_GCC_STAGE_1}" = "xno" ]
+if ! run_command make ${PARALLEL} all-gcc
 then
-    job_start "Building stage 1 GCC"
+    error "Failed to build GCC (stage 1)"
+fi
 
-    mkdir_and_enter ${GCC_STAGE_1_BUILD_DIR}
-
-    if ! run_command ${TOP}/gcc/configure \
-               --prefix="${INSTALL_PREFIX_DIR}" \
-               --sysconfdir="${INSTALL_SYSCONF_DIR}" \
-               --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
-               --disable-shared \
-               --disable-static \
-               --disable-gtk-doc \
-               --disable-gtk-doc-html \
-               --disable-doc \
-               --disable-docs \
-               --disable-documentation \
-               --with-xmlto=no \
-               --with-fop=no \
-               --target=${TARGET_TRIPLET} \
-               --with-sysroot=${SYSROOT_DIR} \
-               --disable-__cxa_atexit \
-               --with-gnu-ld \
-               --disable-libssp \
-               --disable-multilib \
-               --enable-target-optspace \
-               --disable-libsanitizer \
-               --disable-tls \
-               --disable-libmudflap \
-               --disable-threads \
-               --disable-libquadmath \
-               --disable-libgomp \
-               --without-isl \
-               --without-cloog \
-               --disable-decimal-float \
-               --with-arch=${WITH_ARCH} \
-               --with-abi=${WITH_ABI} \
-               --enable-languages=c \
-               --without-headers \
-               --with-newlib \
-               --disable-largefile \
-               --disable-nls \
-               --enable-checking=yes
-    then
-        error "Failed to configure GCC (stage 1)"
-    fi
-
-    if ! run_command make ${PARALLEL} all-gcc
-    then
-        error "Failed to build GCC (stage 1)"
-    fi
-
-    if ! run_command make ${PARALLEL} install-gcc
-    then
-        error "Failed to install GCC (stage 1)"
-    fi
-else
-    job_start "Skipping stage 1 GCC"
+if ! run_command make ${PARALLEL} install-gcc
+then
+    error "Failed to install GCC (stage 1)"
 fi
 
 job_done
 
-fi
-
 # ====================================================================
 #                   Build and install newlib
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 job_start "Building newlib"
 
@@ -439,14 +421,9 @@ fi
 
 job_done
 
-fi
-
 # ====================================================================
 #                Build and Install GCC (Stage 2)
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 job_start "Building stage 2 GCC"
 
@@ -493,105 +470,99 @@ then
     error "Failed to configure GCC (stage 2)"
 fi
 
-if ! run_command make ${PARALLEL} all-gcc all-target-libgcc
+if ! run_command make ${PARALLEL} all
 then
     error "Failed to build GCC (stage 2)"
 fi
 
-if ! run_command make ${PARALLEL} install-gcc install-target-libgcc
+if ! run_command make ${PARALLEL} install
 then
     error "Failed to install GCC (stage 2)"
 fi
 
 job_done
 
-fi
 
 # ====================================================================
-#                Build and Install DejaGNU
+#                Build and Install RISC-V Front-End Server (fesvr)
 # ====================================================================
 
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
+job_start "Building fesvr"
+
+mkdir_and_enter ${FESVR_BUILD_DIR}
+
+if ! run_command ${TOP}/riscv-fesvr/configure \
+           --prefix=${INSTALL_DIR} \
+           --target=${TARGET_TRIPLET}
 then
-
-job_start "Building DejaGNU"
-
-mkdir_and_enter ${DEJAGNU_BUILD_DIR}
-
-if ! run_command ${TOP}/dejagnu/configure \
-           --prefix="${INSTALL_PREFIX_DIR}"
-then
-    error "Failed to configure DejaGNU"
-fi
-
-if ! run_command make
-then
-    error "Failed to build DejaGNU"
+    error "Failed to configure fesvr"
 fi
 
 if ! run_command make install
 then
-    error "Failed to install DejaGNU"
+    error "Failed to build and install fesvr"
 fi
 
 job_done
 
-fi
 
 # ====================================================================
-#             Build GDB Server for provided targets
+#                Build and Install RISC-V Proxy Kernel (pk)
 # ====================================================================
 
-echo "PICORV32 for GDBServer: ${PICORV32_BUILD_DIR}"
-echo "   RI5CY for GDBServer: ${RI5CY_BUILD_DIR}"
+job_start "Building pk (RISC-V Proxy Kernel)"
 
-job_start "Building GDB Server for provided targets"
+mkdir_and_enter ${PK_BUILD_DIR}
 
-cd ${TOP}/gdbserver
-
-if ! run_command autoreconf --install
+if ! run_command ${TOP}/riscv-pk/configure \
+           --prefix=${INSTALL_DIR} \
+           --host=${TARGET_TRIPLET} \
+           --with-arch=${WITH_ARCH} \
+           --with-abi=${WITH_ABI}
 then
-    error "Failed to autoreconf for GDB Server"
-fi
-
-mkdir_and_enter ${GDBSERVER_BUILD_DIR}
-
-GDBSERVER_CONFIG_ARGS="\
-    --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
-    --prefix=${TOP}/install"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
-    --with-ri5cy-topmodule=top"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
-    --with-picorv32-topmodule=testbench"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/riscv32-unknown-elf/include \
-    --with-binutils-libdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/riscv32-unknown-elf/lib"
-
-
-if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
-then
-    error "Failed to configure GDB Server"
-fi
-
-if ! run_command make clean
-then
-    error "Failed to make clean for GDB Server"
+    error "Failed to configure pk"
 fi
 
 if ! run_command make
 then
-    error "Failed to build GDB Server"
+    error "Failed to build pk"
 fi
 
 if ! run_command make install
 then
-    error "Failed to install GDB Server"
+    error "Failed to install pk"
 fi
 
 job_done
 
+
+# ====================================================================
+#                Build and Install RISC-V ISA Simulator (SPIKE)
+# ====================================================================
+
+job_start "Building RISC-V ISA Sim"
+
+mkdir_and_enter ${SPIKE_BUILD_DIR}
+
+if ! run_command ${TOP}/riscv-isa-sim/configure \
+           --prefix=${INSTALL_DIR} \
+           --with-fesvr=${INSTALL_DIR} \
+           --with-isa=${WITH_ARCH}
+then
+    error "Failed to configure SPIKE"
+fi
+
+if ! run_command make
+then
+    error "Failed to build SPIKE"
+fi
+
+if ! run_command make install
+then
+    error "Failed to install SPIKE"
+fi
+
+job_done
 
 # ====================================================================
 #                           Finished
