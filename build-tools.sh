@@ -15,11 +15,6 @@ INSTALL_DIR=${TOP}/install
 
 # ====================================================================
 
-PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
-RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
-
-# ====================================================================
-
 # These are deliberately left blank, defaults are filled in below as
 # appropriate.
 WITH_XLEN=
@@ -214,6 +209,8 @@ WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
 
 # ====================================================================
 
+PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
+RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
 GDB_BUILD_DIR=${BUILD_DIR}/gdb
 GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage1
