@@ -22,6 +22,9 @@ function error ()
 
     echo ""
     echo "See ${LOGFILE} for more details"
+    echo ""
+
+    cat ${LOGFILE}
 
     exit 1
 }
