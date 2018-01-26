@@ -8,7 +8,7 @@ if [ "x${SCRIPT_START_TIME}" == "x" ]; then
     echo "SCRIPT_START_TIME unset"
     exit 1
 fi
-    
+
 function msg ()
 {
     echo "$1" | tee -a ${LOGFILE}
@@ -16,15 +16,22 @@ function msg ()
 
 function error ()
 {
-    SCRIPT_END_TIME=`date +%s`
-    TIME_STR=`times_to_time_string ${SCRIPT_START_TIME} ${SCRIPT_END_TIME}`
-
     echo "!! $1" | tee -a ${LOGFILE}
-    echo "All finished ${TIME_STR}." | tee -a ${LOGFILE}
+
+    all_finished
+
     echo ""
     echo "See ${LOGFILE} for more details"
 
     exit 1
+}
+
+function all_finished ()
+{
+    SCRIPT_END_TIME=`date +%s`
+    TIME_STR=`times_to_time_string ${SCRIPT_START_TIME} ${SCRIPT_END_TIME}`
+
+    echo "All finished ${TIME_STR}." | tee -a ${LOGFILE}
 }
 
 function times_to_time_string ()
@@ -132,3 +139,44 @@ function run_command ()
     return $?
 }
 
+function log_git_versions ()
+{
+    echo "" >> ${LOGFILE}
+    echo "Git Versions:" >> ${LOGFILE}
+    until test -z ${1:-}
+    do
+        name=$1
+        shift
+        dir=$1
+        shift
+
+        echo -n "  $name: " >> ${LOGFILE}
+
+        if test -d "${dir}"
+        then
+            pushd `pwd` &>/dev/null
+            cd $dir
+
+            sha=`git rev-parse HEAD 2>/dev/null`
+            if test $? -eq 0
+            then
+                echo -n "${sha}" >> ${LOGFILE}
+            else
+                echo -n "git rev-parse failed" >> ${LOGFILE}
+            fi
+
+            desc=`git describe --dirty --always 2>/dev/null`
+            if test $? -eq 0
+            then
+                echo "  ($desc)" >> ${LOGFILE}
+            else
+                echo "" >> ${LOGFILE}
+            fi
+
+            popd &>/dev/null
+        else
+            echo "No directory found" >> ${LOGFILE}
+        fi
+    done
+    echo "" >> ${LOGFILE}
+}
