@@ -62,7 +62,11 @@ function usage () {
     echo ""
     echo "--with-abi:"
     echo "        Only pass this if you need to override the default that"
-    echo "        GCC will select based on the value passed in--with-arch."
+    echo "        this script selects for you.  The selected ABI will be"
+    echo "        ilp32 or lp64 for 32 or 64 xlen respectively.  The ABI"
+    echo "        will be extended with the 'd' or 'f' modifier if 'd' or"
+    echo "        'f' is included in the --with-arch value.  The 'd' is"
+    echo "        preferred over 'f' if both are present in the arch value"
 
     exit 1
 }
@@ -183,9 +187,23 @@ fi
 
 if [ "${ABI_SPECIFIED}" == "no" ]
 then
-    ABI_FLAG=""
-else
-    ABI_FLAG="--with-abi=${WITH_ABI}"
+    # The base ABI, matching 32 or 64 bit.
+    if [ "${WITH_XLEN}" == "32" ]
+    then
+        WITH_ABI="ilp32"
+    else
+        WITH_ABI="lp64"
+    fi
+
+    # Now, any floating point extensions to the ABI.
+    case ${WITH_ARCH} in
+        *d*)
+            WITH_ABI="${WITH_ABI}d"
+            ;;
+        *f*)
+            WITH_ABI="${WITH_ABI}f"
+            ;;
+    esac
 fi
 
 if [ "${TARGET_SPECIFIED}" == "no" ]
@@ -242,10 +260,7 @@ echo "         Toolchain: ${TOOLCHAIN_DIR}"
 echo "            Target: ${TARGET_TRIPLET}"
 echo "              Xlen: ${WITH_XLEN}"
 echo "              Arch: ${WITH_ARCH}"
-if [ "${ABI_SPECIFIED}" = "yes" ]
-then
-    echo "               ABI: ${WITH_ABI}"
-fi
+echo "               ABI: ${WITH_ABI}"
 echo "       Debug build: ${DEBUG_BUILD}"
 echo "         Build Dir: ${BUILD_DIR}"
 echo "PICORV32 Build Dir: ${PICORV32_BUILD_DIR}"
@@ -491,7 +506,7 @@ then
                --without-cloog \
                --disable-decimal-float \
                --with-arch=${WITH_ARCH} \
-               ${ABI_FLAG} \
+               --with-abi=${WITH_ABI} \
                --enable-languages=c \
                --without-headers \
                --with-newlib \
@@ -598,7 +613,7 @@ if ! run_command ${TOP}/gcc/configure \
            --without-cloog \
            --disable-decimal-float \
            --with-arch=${WITH_ARCH} \
-           ${ABI_FLAG} \
+           --with-abi=${WITH_ABI} \
            --enable-languages=c,c++ \
            --with-newlib \
            --disable-largefile \
