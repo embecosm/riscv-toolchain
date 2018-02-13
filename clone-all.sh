@@ -26,64 +26,19 @@
 
 # Invocation Syntax
 
-#     clone-all.sh [-dev]
-
-# Argument meanings:
-
-#     -dev  Clone Embecosm repos as SSH, rather than HTTPS, allowing write
-#           access.
-
-# If the BASE_URL environment variable is set, then that is used as the base of
-# all repository URLs, to allow cloning from non-github sources (e.g. local
-# mirrors).
+#     clone-all.sh
 
 # Set the top level directory.
 topdir=$(cd $(dirname $0)/..;pwd)
 
-# Are we a developer?
-if [ \( $# = 1 \) -a \( "x$1" = "x-dev" \) ]
-then
-    BASE_URL=git@github.com:embecosm
-fi
-
-# Set the default base URL, if it is not already provided by the environment.
-if [ -z ${BASE_URL+x} ]
-then
-    BASE_URL=https://github.com/embecosm
-fi
-
-# Upstream repo names
-US=github
-EM=embecosm
-
 cd ${topdir}
 
 # get the most important ones first
-git clone -o ${EM} ${BASE_URL}/riscv-binutils-gdb.git binutils
-git clone -o ${EM} ${BASE_URL}/riscv-gcc.git gcc
-git clone -o ${EM} ${BASE_URL}/riscv-gdb.git gdb
-git clone -o ${EM} ${BASE_URL}/riscv-newlib.git newlib
+git clone -o embecosm -b gdb-riscv-sim https://github.com/embecosm/riscv-gdb.git gdb
+ln -s gdb binutils
+git clone -o upstream -b master git://gcc.gnu.org/git/gcc.git gcc
+git clone -o embecosm -b riscv-newlib-2.5.0 https://github.com/embecosm/riscv-newlib.git newlib
 
 # now get those for testing/executing
-git clone -o ${EM} ${BASE_URL}/riscv-dejagnu.git dejagnu
-
-git clone -o ${EM} ${BASE_URL}/riscv-gdbserver.git gdbserver
-git clone -o ${EM} ${BASE_URL}/picorv32.git picorv32
-git clone -o ${EM} ${BASE_URL}/ri5cy.git ri5cy
-git clone -o ${EM} ${BASE_URL}/riscv-pk.git riscv-pk
-git clone -o ${EM} ${BASE_URL}/riscv-fesvr.git riscv-fesvr
-git clone -o ${EM} ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
-
-git clone -o ${EM} ${BASE_URL}/riscv-beebs.git beebs
-git clone -o ${EM} ${BASE_URL}/riscv-tests.git riscv-tests
-
-git clone -o ${EM} ${BASE_URL}/berkeley-softfloat-3 berkeley-softfloat-3
-git clone -o ${EM} ${BASE_URL}/berkeley-testfloat-3 berkeley-testfloat-3
-
-# initialize the submodule for the test environment in riscv-tests
-cd riscv-tests
-git submodule update --init --recursive
-cd ${topdir}
-
-echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
+git clone -o embecosm -b riscv-dejagnu-1.6 https://github.com/embecosm/riscv-dejagnu.git dejagnu
 

@@ -5,7 +5,6 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 # ====================================================================
 
-GDBSERVER_ONLY=no
 SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 DEBUG_BUILD=no
@@ -35,11 +34,8 @@ function usage () {
     echo "                        [--with-xlen <xlen>]"
     echo "                        [--clean]"
     echo "                        [--debug]"
-    echo "                        [--picorv32-build-dir <picorv32_build_dir>]"
-    echo "                        [--ri5cy-build-dir <ri5cy_build_dir>]"
     echo "                        [--jobs <count>] [--load <load>]"
     echo "                        [--single-thread]"
-    echo "                        [--gdbserver-only]"
     echo "                        [--skip-gcc-stage-1]"
     echo "                        [--with-target <target>]"
     echo "                        [--with-arch <arch>]"
@@ -90,16 +86,6 @@ case ${opt} in
 	INSTALL_DIR=$(realpath -m $1)
 	;;
 
-    --picorv32-build-dir)
-	shift
-	PICORV32_BUILD_DIR=$(realpath -m $1)
-	;;
-
-    --ri5cy-build-dir)
-	shift
-	RI5CY_BUILD_DIR=$(realpath -m $1)
-	;;
-
     --jobs)
 	shift
 	JOBS=$1
@@ -117,10 +103,6 @@ case ${opt} in
 
     --clean)
 	CLEAN_BUILD=yes
-	;;
-
-    --gdbserver-only)
-	GDBSERVER_ONLY=yes
 	;;
 
     --debug)
@@ -227,14 +209,11 @@ WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
 
 # ====================================================================
 
-PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
-RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
 BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
 GDB_BUILD_DIR=${BUILD_DIR}/gdb
 GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage2
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
-GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
 DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
@@ -263,8 +242,6 @@ echo "              Arch: ${WITH_ARCH}"
 echo "               ABI: ${WITH_ABI}"
 echo "       Debug build: ${DEBUG_BUILD}"
 echo "         Build Dir: ${BUILD_DIR}"
-echo "PICORV32 Build Dir: ${PICORV32_BUILD_DIR}"
-echo "   RI5CY Build Dir: ${RI5CY_BUILD_DIR}"
 echo "       Install Dir: ${INSTALL_DIR}"
 
 if [ "x${CLEAN_BUILD}" = "xyes" ]
@@ -275,14 +252,9 @@ then
 	sleep 1
     done
     echo -e "\r       Clean Build: yes                           "
-    if [ "x${GDBSERVER_ONLY}" = "xno" ]
-    then
-        rm -fr ${BINUTILS_BUILD_DIR} ${GDB_BUILD_DIR} \
+    rm -fr ${BINUTILS_BUILD_DIR} ${GDB_BUILD_DIR} \
            ${GCC_STAGE_1_BUILD_DIR} ${NEWLIB_BUILD_DIR} \
-           ${GCC_STAGE_2_BUILD_DIR} ${GDBSERVER_BUILD_DIR}
-    else
-        rm -fr ${GDBSERVER_BUILD_DIR}
-    fi
+           ${GCC_STAGE_2_BUILD_DIR}
 else
     echo "       Clean Build: no"
 fi
@@ -291,18 +263,6 @@ if [ "x${DEBUG_BUILD}" = "xyes" ]
 then
     export CFLAGS="-g3 -O0"
     export CXXFLAGS="-g3 -O0"
-fi
-
-if [ ! -e ${PICORV32_BUILD_DIR} ]
-then
-    echo "PICORV32 build directory does not exist"
-    exit 1
-fi
-
-if [ ! -e ${RI5CY_BUILD_DIR} ]
-then
-    echo "RI5CY build directory does not exist"
-    exit 1
 fi
 
 # ====================================================================
@@ -350,7 +310,6 @@ BINUTILS_SOURCE_DIR=${TOP}/binutils
 GDB_SOURCE_DIR=${TOP}/gdb
 GCC_SOURCE_DIR=${TOP}/gcc
 NEWLIB_SOURCE_DIR=${TOP}/newlib
-GDBSERVER_SOURCE_DIR=${TOP}/gdbserver
 
 # ====================================================================
 #                Log git versions into the build log
@@ -360,16 +319,12 @@ job_start "Writing git versions to log file"
 log_git_versions binutils "${BINUTILS_SOURCE_DIR}" \
                  gdb "${GDB_SOURCE_DIR}" \
                  gcc "${GCC_SOURCE_DIR}" \
-                 newlib "${NEWLIB_SOURCE_DIR}" \
-                 gdbserver "${GDBSERVER_SOURCE_DIR}"
+                 newlib "${NEWLIB_SOURCE_DIR}"
 job_done
 
 # ====================================================================
 #                   Build and install binutils
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 job_start "Building binutils"
 
@@ -412,14 +367,9 @@ fi
 
 job_done
 
-fi
-
 # ====================================================================
 #                   Build and install GDB and sim
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 job_start "Building GDB and sim"
 
@@ -461,14 +411,9 @@ fi
 
 job_done
 
-fi
-
 # ====================================================================
 #                Build and Install GCC (Stage 1)
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 if [ "x${SKIP_GCC_STAGE_1}" = "xno" ]
 then
@@ -532,14 +477,9 @@ fi
 
 job_done
 
-fi
-
 # ====================================================================
 #                   Build and install newlib
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 job_start "Building newlib"
 
@@ -570,14 +510,9 @@ fi
 
 job_done
 
-fi
-
 # ====================================================================
 #                Build and Install GCC (Stage 2)
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 job_start "Building stage 2 GCC"
 
@@ -636,14 +571,9 @@ fi
 
 job_done
 
-fi
-
 # ====================================================================
 #                Build and Install DejaGNU
 # ====================================================================
-
-if [ "x${GDBSERVER_ONLY}" = "xno" ]
-then
 
 job_start "Building DejaGNU"
 
@@ -666,63 +596,6 @@ then
 fi
 
 job_done
-
-fi
-
-# ====================================================================
-#             Build GDB Server for provided targets
-# ====================================================================
-
-echo "PICORV32 for GDBServer: ${PICORV32_BUILD_DIR}"
-echo "   RI5CY for GDBServer: ${RI5CY_BUILD_DIR}"
-
-job_start "Building GDB Server for provided targets"
-
-cd ${TOP}/gdbserver
-
-if ! run_command autoreconf --install
-then
-    error "Failed to autoreconf for GDB Server"
-fi
-
-mkdir_and_enter ${GDBSERVER_BUILD_DIR}
-
-GDBSERVER_CONFIG_ARGS="\
-    --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
-    --prefix=${TOP}/install"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
-    --with-ri5cy-topmodule=top"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
-    --with-picorv32-topmodule=testbench"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/include \
-    --with-binutils-libdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/lib"
-
-
-if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
-then
-    error "Failed to configure GDB Server"
-fi
-
-if ! run_command make clean
-then
-    error "Failed to make clean for GDB Server"
-fi
-
-if ! run_command make
-then
-    error "Failed to build GDB Server"
-fi
-
-if ! run_command make install
-then
-    error "Failed to install GDB Server"
-fi
-
-job_done
-
 
 # ====================================================================
 #                           Finished
