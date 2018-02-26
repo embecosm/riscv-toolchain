@@ -313,19 +313,23 @@ JOB_TITLE=
 SCRIPT_START_TIME=`date +%s`
 
 LOGDIR=${TOP}/logs
-LOGFILE=${LOGDIR}/build-$(date +%F-%H%M).log
-
-echo "          Log file: ${LOGFILE}"
-echo "          Start at: "`date`
-echo "          Parallel: ${PARALLEL}"
-echo ""
-
-rm -f ${LOGFILE}
 if ! mkdir -p ${LOGDIR}
 then
     echo "Failed to create log directory: ${LOGDIR}"
     exit 1
 fi
+
+LOGFILE=`mktemp -p ${LOGDIR} build-$(date +%F-%H%M)-XXXX.log`
+if [ ! -w "${LOGFILE}" ]
+then
+    echo "Logfile is not writable: ${LOGFILE}"
+    exit 1
+fi
+
+echo "          Log file: ${LOGFILE}"
+echo "          Start at: "`date`
+echo "          Parallel: ${PARALLEL}"
+echo ""
 
 if ! touch ${LOGFILE}
 then
