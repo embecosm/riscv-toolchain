@@ -99,10 +99,13 @@ done
 
 # ====================================================================
 
-RESULTS_DIR=${RESULTS_DIR}/results-$(date +%F-%H%M)
-mkdir -p ${RESULTS_DIR}
 [ ! -z "${RESULTS_DIR}" ] || error "no results directory"
-rm -f ${RESULTS_DIR}/*
+mkdir -p "${RESULTS_DIR}" || error "failed to create results directory"
+TMP_RESULTS_DIR=`mktemp -d -p ${RESULTS_DIR} "results-$(date +%F-%H%M)-XXXX" 2>/dev/null`
+[ ! -z "${TMP_RESULTS_DIR}" ] || error "no run-specific results directory"
+[ -d "${TMP_RESULTS_DIR}" ] || error "no run-specific results directory found"
+rm -f ${TMP_RESULTS_DIR}/*
+RESULTS_DIR=${TMP_RESULTS_DIR}
 
 # ====================================================================
 
