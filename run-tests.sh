@@ -99,10 +99,10 @@ done
 
 # ====================================================================
 
-RESULTS_DIR=${RESULTS_DIR}/results-$(date +%F-%H%M)
-mkdir -p ${RESULTS_DIR}
 [ ! -z "${RESULTS_DIR}" ] || error "no results directory"
-rm -f ${RESULTS_DIR}/*
+TMP_RESULTS_DIR=`mktemp -d -p ${RESULTS_DIR} "results-$(date +%F-%H%M)-XXXX"`
+rm -f ${TMP_RESULTS_DIR}/*
+RESULTS_DIR=${TMP_RESULTS_DIR}
 
 # ====================================================================
 
