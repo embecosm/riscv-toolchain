@@ -23,6 +23,9 @@ WITH_ABI=
 JOBS=
 LOAD=
 
+PICORV32_BUILD_DIR=
+RI5CY_BUILD_DIR=
+
 # ====================================================================
 
 function usage () {
@@ -227,8 +230,16 @@ WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
 
 # ====================================================================
 
-PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
-RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
+if [ -z "${PICORV32_BUILD_DIR}" ]
+then
+    PICORV32_BUILD_DIR=${BUILD_DIR}/picorv32
+fi
+
+if [ -z "${RI5CY_BUILD_DIR}" ]
+then
+    RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
+fi
+
 BINUTILS_BUILD_DIR=${BUILD_DIR}/binutils
 GDB_BUILD_DIR=${BUILD_DIR}/gdb
 GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage1
@@ -263,8 +274,21 @@ echo "              Arch: ${WITH_ARCH}"
 echo "               ABI: ${WITH_ABI}"
 echo "       Debug build: ${DEBUG_BUILD}"
 echo "         Build Dir: ${BUILD_DIR}"
-echo "PICORV32 Build Dir: ${PICORV32_BUILD_DIR}"
-echo "   RI5CY Build Dir: ${RI5CY_BUILD_DIR}"
+
+if [ -e "${PICORV32_BUILD_DIR}" ]
+then
+    echo "PICORV32 Build Dir: ${PICORV32_BUILD_DIR}"
+else
+    echo "PICORV32 Build Dir: N/A"
+fi
+
+if [ -e "${RI5CY_BUILD_DIR}" ]
+then
+    echo "   RI5CY Build Dir: ${RI5CY_BUILD_DIR}"
+else
+    echo "   RI5CY Build Dir: N/A"
+fi
+
 echo "       Install Dir: ${INSTALL_DIR}"
 
 if [ "x${CLEAN_BUILD}" = "xyes" ]
@@ -291,18 +315,6 @@ if [ "x${DEBUG_BUILD}" = "xyes" ]
 then
     export CFLAGS="-g3 -O0"
     export CXXFLAGS="-g3 -O0"
-fi
-
-if [ ! -e ${PICORV32_BUILD_DIR} ]
-then
-    echo "PICORV32 build directory does not exist"
-    exit 1
-fi
-
-if [ ! -e ${RI5CY_BUILD_DIR} ]
-then
-    echo "RI5CY build directory does not exist"
-    exit 1
 fi
 
 # ====================================================================
@@ -677,8 +689,15 @@ fi
 #             Build GDB Server for provided targets
 # ====================================================================
 
-echo "PICORV32 for GDBServer: ${PICORV32_BUILD_DIR}"
-echo "   RI5CY for GDBServer: ${RI5CY_BUILD_DIR}"
+if [ -e "${PICORV32_BUILD_DIR}" ]
+then
+    echo "PICORV32 for GDBServer: ${PICORV32_BUILD_DIR}"
+fi
+
+if [ -e "${RI5CY_BUILD_DIR}" ]
+then
+    echo "   RI5CY for GDBServer: ${RI5CY_BUILD_DIR}"
+fi
 
 job_start "Building GDB Server for provided targets"
 
@@ -694,16 +713,25 @@ mkdir_and_enter ${GDBSERVER_BUILD_DIR}
 GDBSERVER_CONFIG_ARGS="\
     --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
     --prefix=${TOP}/install"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
-    --with-ri5cy-topmodule=top"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
-    --with-picorv32-topmodule=testbench"
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/include \
-    --with-binutils-libdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/lib"
+if [ -e "${RI5CY_BUILD_DIR}" ]
+then
+    GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+        --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
+        --with-ri5cy-topmodule=top"
+fi
 
+if [ -e "${PICORV32_BUILD_DIR}" ]
+then
+    GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+        --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
+        --with-picorv32-topmodule=testbench"
+fi
+
+GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+    --with-gdbsim-builddir=${GDB_BUILD_DIR}"
+
+GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+    --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/include"
 
 if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
 then
