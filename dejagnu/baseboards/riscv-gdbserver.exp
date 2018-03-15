@@ -50,25 +50,44 @@ set DEBUG_TORTURE_OPTIONS {-gdwarf-2}
 # registers when we have breakpointed _exit, exit and abort.
 set_board_info needs_status_wrapper 0
 
+# Configure for a slow simulator
+set_board_info is_simulator 1
+set_board_info slow_simulator 1
+
 # Configure specially for testing via GDB
 set_board_info gdb_run_command "continue"
-set_board_info gdb_protocol  "remote"
+set_board_info gdb_protocol "remote"
 set_board_info gdb,start_symbol "_start"
-set_board_info gdb,remote_timeout "$env(RISCV_TIMEOUT)"
-set_board_info use_gdb_stub 1
-set_board_info netport ":$env(RISCV_NETPORT)"
+if { [info exists env(RISCV_TIMEOUT) ] } {
+    set_board_info gdb,remote_timeout "$env(RISCV_TIMEOUT)"
+} else {
+    set_board_info gdb,remote_timeout "60"
+}
 
-# GCC tool specific settings. Stack should generally be half the available
-# RAM, but the value is up to the caller. Although other boards set it, it is
-# not clear that text_size has any effect.
-set_board_info gcc,stack_size $env(RISCV_STACK_SIZE)
-set_board_info gcc,text_size $env(RISCV_TEXT_SIZE)
-set_board_info gcc,no_trampolines 1
-set_board_info gcc,no_pch_tests 1
-set_board_info gcc,keeps_null_pointer_checks 1
+if { [info exists env(RISCV_CORE) ] } {
+    set riscv_corename "$env(RISCV_CORE)"
+} else {
+    set riscv_corename "gdbsim"
+}
+
+set_board_info use_gdb_stub 1
+
+set_board_info netport "| riscv$env(RISCV_XLEN)-gdbserver -c $riscv_corename --stdin"
+set GDB "riscv$env(RISCV_XLEN)-unknown-elf-gdb"
+
+# RISCV_TRACE contains a comma separated list of trace flags, martial them
+# into a tcl list in the board_info here.
+if { [info exists env(RISCV_TRACE) ] } {
+    set trace_flags [split $env(RISCV_TRACE) ,]
+    set_board_info target_trace "$trace_flags"
+}
 
 # GDB tool specific settings
-set gdb_test_timeout $env(RISCV_GDB_TIMEOUT)
+if { [info exists env(RISCV_GDB_TIMEOUT) ] } {
+    set gdb_test_timeout $env(RISCV_GDB_TIMEOUT)
+} else {
+    set gdb_test_timeout 60
+}
 
 set_board_info gdb,can_reverse 0
 set_board_info gdb,nofileio 1
@@ -94,4 +113,3 @@ set_board_info gdb,no_trampolines 1
 set_board_info gdb,cannot_call_functions 1
 
 set_board_info debug_flags "-g3"
-
