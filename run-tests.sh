@@ -131,10 +131,6 @@ case "${TARGET_BOARD}" in
     riscv-picorv32|riscv-ri5cy)
 	# Set up and export any board parameters.
 	export RISCV_NETPORT=51235
-	export RISCV_TIMEOUT=10
-	export RISCV_GDB_TIMEOUT=10
-	export RISCV_STACK_SIZE="4096"
-	export RISCV_TEXT_SIZE="65536"
 
 	# We only start one gdbserver, so only run one test at a time.
 	PARALLEL=1
@@ -164,6 +160,28 @@ case "${TARGET_BOARD}" in
 	PARALLEL=8
         ;;
 esac
+
+TARGET_XLEN=
+case "${WITH_TARGET}" in
+    riscv32-unknown-elf)
+        TARGET_XLEN=32
+        ;;
+    riscv64-unknown-elf)
+        TARGET_XLEN=64
+        ;;
+esac
+
+if [ -z "${TARGET_XLEN}" ]
+then
+    echo "Couldn't figure out XLEN value"
+    exit 1
+fi
+
+export RISCV_TIMEOUT=10
+export RISCV_GDB_TIMEOUT=10
+export RISCV_STACK_SIZE="4096"
+export RISCV_TEXT_SIZE="65536"
+export RISCV_XLEN=${TARGET_XLEN}
 
 # ====================================================================
 
