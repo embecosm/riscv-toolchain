@@ -37,11 +37,14 @@ proc gdb_stub_init { dest args } {
     global gdb_prompt
     global GDB
     global tool_root_dir
-
-    set GDB "riscv32-unknown-elf-gdb"
+    global env
 
     if {![info exists GDB]} then {
-        set GDB "[lookfor_file ${tool_root_dir} riscv32-unknown-elf-gdb]"
+        set xlen 32
+        if {[info exists env(RISCV_XLEN)]} then {
+            set xlen $env(RISCV_XLEN)
+        }
+        set GDB "[lookfor_file ${tool_root_dir} riscv${xlen}-unknown-elf-gdb]"
         if { $GDB == "" } {
             set GDB [transform gdb]
         }
