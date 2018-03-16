@@ -712,7 +712,8 @@ mkdir_and_enter ${GDBSERVER_BUILD_DIR}
 
 GDBSERVER_CONFIG_ARGS="\
     --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
-    --prefix=${INSTALL_PREFIX_DIR}"
+    --prefix=${INSTALL_PREFIX_DIR} \
+    --with-xlen=${WITH_XLEN}"
 if [ -e "${RI5CY_BUILD_DIR}" ]
 then
     GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
