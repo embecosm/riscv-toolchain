@@ -15,26 +15,37 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set_board_info target_install  {$target_triplet}
+set_board_info target_install {$target_triplet}
 
-# routines needed to communicate with the board via GDB.
-load_generic_config "gdb_stub"
+# Load the generic routines for talking to GDBServer
+# load_generic_config "gdbserver"
 
-# this is how we detect pass or fail
-set gdb_print_return_code "print /u \$a0"
+# Most baseboard files will use LOAD_GENERIC_CONFIG here, however,
+# that doesn't really do the right thing.  The set of directories that
+# it looks in means that it will not find the generic config file.
+# Instead, all it does is set the GENERIC_NAME attribute on
+# BOARD_INFO, which in turn causes the generic config file to be
+# loaded later.  This is bad, as we want to override some of the
+# functions defined in the generic config file.
+#
+# The solution here is to do a couple of things, first, we avoid
+# LOAD_GENERIC_CONFIG, and set the GENERIC_NAME ourselves.  Then we
+# override the function LOAD_TOOL_TARGET_CONFIG, this is defined in
+# core runtest.exp and is what does the second loading of the generic
+# config file.  Finally, we use SEARCH_AND_LOAD_FILE in order to load
+# the generic config file.
+#
+# 1. Setup GENERIC_NAME
+set_board_info generic_name "gdbserver"
+# 2. Override LOAD_TOOL_TARGET_CONFIG
+rename load_tool_target_config { }
+proc load_tool_target_config { name } { }
+# 3. Load generic config with SEARCH_AND_LOAD_FILE
+search_and_load_file "generic interface file" "gdbserver.exp" "${srcdir}/config"
 
-# We need some extra and modified procs for testing through GDB. These
-# supplement or override the standard procs.
-search_and_load_file "library file" "gdb-stub-extra.exp" ${boards_dir}
-search_and_load_file "library file" "gdb-extra.exp" ${boards_dir}
-search_and_load_file "library file" "remote-extra.exp" ${boards_dir}
-
-# No default multilib options are needed for this board.
-process_multilib_options ""
-
-# The compiler used to build for this board. This has *nothing* to do
-# with what compiler is tested if we're testing gcc.
-set_board_info compiler "[find_gcc]"
+# Load some additional helper configuration files.
+load_board_description "gdbserver-base"
+load_board_description "riscv-gdbserver-support"
 
 # I also supplied cflags and ldflags along the same lines as riscv-sim
 set_board_info cflags   "[libgloss_include_flags] [newlib_include_flags]"
@@ -54,26 +65,29 @@ set_board_info needs_status_wrapper 0
 set_board_info is_simulator 1
 set_board_info slow_simulator 1
 
+proc riscv_env_var { varname defaultval } {
+    global env
+
+    if { [info exists env(${varname}) ] } {
+        return $env(${varname})
+    } else {
+        return ${defaultval}
+    }
+}
+
 # Configure specially for testing via GDB
 set_board_info gdb_run_command "continue"
 set_board_info gdb_protocol "remote"
 set_board_info gdb,start_symbol "_start"
-if { [info exists env(RISCV_TIMEOUT) ] } {
-    set_board_info gdb,remote_timeout "$env(RISCV_TIMEOUT)"
-} else {
-    set_board_info gdb,remote_timeout "60"
-}
+set_board_info gdb,remote_timeout [riscv_env_var RISCV_TIMEOUT 60]
 
-if { [info exists env(RISCV_CORE) ] } {
-    set riscv_corename "$env(RISCV_CORE)"
-} else {
-    set riscv_corename "gdbsim"
-}
+set riscv_corename [riscv_env_var RISCV_CORE gdbsim]
+set riscv_xlen [riscv_env_var RISCV_XLEN 32]
 
 set_board_info use_gdb_stub 1
 
-set_board_info netport "| riscv$env(RISCV_XLEN)-gdbserver -c $riscv_corename --stdin"
-set GDB "riscv$env(RISCV_XLEN)-unknown-elf-gdb"
+set GDB "riscv${riscv_xlen}-unknown-elf-gdb"
+set GDBSERVER "riscv${riscv_xlen}-gdbserver --stdin --core ${riscv_corename}"
 
 # RISCV_TRACE contains a comma separated list of trace flags, martial them
 # into a tcl list in the board_info here.
@@ -83,33 +97,15 @@ if { [info exists env(RISCV_TRACE) ] } {
 }
 
 # GDB tool specific settings
-if { [info exists env(RISCV_GDB_TIMEOUT) ] } {
-    set gdb_test_timeout $env(RISCV_GDB_TIMEOUT)
-} else {
-    set gdb_test_timeout 60
-}
+set gdb_test_timeout [riscv_env_var RISCV_GDB_TIMEOUT 60]
 
 set_board_info gdb,can_reverse 0
-set_board_info gdb,nofileio 1
-set_board_info gdb,noinferiorio 1
 set_board_info gdb,noresults 1
 set_board_info gdb,nosignals 1
-set_board_info gdb,skip_huge_test 0
-set_board_info gdb,skip_float_tests 0
 set_board_info gdb,use_precord 0
 set_board_info noargs 1
-set_board_info gdb,exit_is_reliable 0
 set_board_info gdb,no_thread_names 1
 set_board_info gdb,no_self_modifying_code 1
-
-
-#set_board_info gdb,no_long_long 1
-#set_board_info gdb,short_int 0
-
-set_board_info gdb,no_trampolines 1
-
-# Temporarily tell GDB that we don't support calling target functions.
-# We'll need to fix this later.
-set_board_info gdb,cannot_call_functions 1
+set_board_info gdb,do_reload_on_run 1
 
 set_board_info debug_flags "-g3"
