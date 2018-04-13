@@ -7,6 +7,7 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 CLEAN_BUILD=no
 DEBUG_BUILD=no
+STACK_ERASE=no
 BUILD_DIR=${TOP}/build
 INSTALL_DIR=${TOP}/install
 
@@ -38,6 +39,7 @@ function usage () {
     echo "                        [--with-target <target>]"
     echo "                        [--with-arch <arch>]"
     echo "                        [--with-abi <abi>]"
+    echo "                        [--enable-default-stack-erase]"
     echo
     echo "--with-xlen:"
     echo "        Choose between 32 or 64.  Default is 32."
@@ -61,6 +63,11 @@ function usage () {
     echo "        will be extended with the 'd' or 'f' modifier if 'd' or"
     echo "        'f' is included in the --with-arch value.  The 'd' is"
     echo "        preferred over 'f' if both are present in the arch value"
+    echo ""
+    echo "--enable-default-stack-erase:"
+    echo "        Pass this if you'd like to build GCC and newlib such that"
+    echo "        stack erase is turned on by default, and crt0 verifies that"
+    echo "        the stack has been erased after main returns."
 
     exit 1
 }
@@ -131,6 +138,11 @@ case ${opt} in
         ABI_SPECIFIED=yes
 	;;
 
+    --enable-default-stack-erase)
+        shift
+        STACK_ERASE=yes
+        ;;
+
     ?*)
 	usage "Unknown argument $1"
 	;;
@@ -192,6 +204,15 @@ then
 fi
 
 WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
+
+if [ "${STACK_ERASE}" == "yes" ]
+then
+    GCC_STACK_ERASE=--enable-default-stack-erase
+    NEWLIB_STACK_ERASE=--enable-stack-erase
+else
+    GCC_STACK_ERASE=""
+    NEWLIB_STACK_ERASE=""
+fi
 
 # ====================================================================
 
@@ -306,8 +327,6 @@ if ! run_command ${TOP}/binutils-gdb/configure \
          --with-sysroot=${SYSROOT_DIR} \
          --enable-poison-system-directories \
          --disable-tls \
-         --disable-libdecnumber \
-         --disable-readline \
          --enable-shared \
          --disable-sim
 then
@@ -371,7 +390,8 @@ if ! run_command ${TOP}/gcc/configure \
            --with-newlib \
            --disable-largefile \
            --disable-nls \
-           --enable-checking=yes
+           --enable-checking=yes \
+           ${GCC_STACK_ERASE}
 then
     error "Failed to configure GCC (stage 1)"
 fi
@@ -404,7 +424,8 @@ if ! run_command ${TOP}/newlib/configure \
          --sysconfdir=${INSTALL_SYSCONF_DIR} \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
          --target=${TARGET_TRIPLET} \
-         --with-sysroot=${SYSROOT_DIR}
+         --with-sysroot=${SYSROOT_DIR} \
+         ${NEWLIB_STACK_ERASE}
 then
     error "Failed to configure newlib"
 fi
@@ -465,7 +486,8 @@ if ! run_command ${TOP}/gcc/configure \
            --disable-largefile \
            --disable-nls \
            --enable-checking=yes \
-           --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin
+           --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin \
+           ${GCC_STACK_ERASE}
 then
     error "Failed to configure GCC (stage 2)"
 fi

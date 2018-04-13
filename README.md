@@ -25,6 +25,7 @@ To build the toolchain and ISA simulator, use
 ./build-all.sh [--with-xlen <xlen>]
                [--with-arch <arch>]
                [--with-abi  <abi>]
+               [--enable-default-stack-erase]
 ```
 
 All arguments are optional, the defaults being to build a toolchain for `rv32im`
@@ -35,6 +36,9 @@ with the `ilp32` ABI. Possible values are:
 | `xlen`    | `32` or `64`                                   |
 | `arch`    | ISA and extensions, e.g. `i`, `im`, `gc`, etc. |
 | `abi`     | `ilp32`, `lp64`, etc.                          |
+
+Passing the argument `--enable-default-stack-erase` will result in a toolchain
+where stack erase is on by default.
 
 Executing the GCC tests
 -----------------------
