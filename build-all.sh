@@ -325,7 +325,6 @@ if ! run_command ${TOP}/binutils-gdb/configure \
          --with-sysroot=${SYSROOT_DIR} \
          --enable-poison-system-directories \
          --disable-tls \
-         --enable-shared \
          --disable-sim
 then
     error "Failed to configure binutils and GDB"
