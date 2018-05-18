@@ -16,7 +16,7 @@ WITH_TARGET=riscv32-unknown-elf
 BUILD_DIR=${TOP}/build
 RESULTS_DIR=${TOP}/logs
 INSTALL_DIR=${TOP}/install
-TARGET_BOARD=riscv-spike
+TARGET_BOARD=riscv-sim
 TARGET_SUBSET=
 TOOL=gcc
 COMMENT="none"
@@ -129,12 +129,12 @@ GDB_BUILD_DIR=${BUILD_DIR}/gdb
 
 # ====================================================================
 
-# So that spike, riscv32-unknown-elf-run, etc. can be found
+# Add tools to path
 export PATH=${INSTALL_DIR}/bin:$PATH
 
 # ====================================================================
 
-# So that dejagnu can find the correct baseboard file (e.g. riscv-spike.exp)
+# So that dejagnu can find the correct baseboard file (e.g. riscv-sim.exp)
 export DEJAGNU=${TOOLCHAIN_DIR}/site.exp
 
 # ====================================================================

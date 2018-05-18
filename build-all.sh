@@ -229,9 +229,7 @@ GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage-1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 GCC_NATIVE_BUILD_DIR=${BUILD_DIR}/gcc-native
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
-FESVR_BUILD_DIR=${BUILD_DIR}/riscv-fesvr
-PK_BUILD_DIR=${BUILD_DIR}/riscv-pk
-SPIKE_BUILD_DIR=${BUILD_DIR}/riscv-isa-sim
+QEMU_BUILD_DIR=${BUILD_DIR}/qemu
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
 INSTALL_SYSCONF_DIR=${INSTALL_DIR}/etc
@@ -484,82 +482,46 @@ job_done
 
 
 # ====================================================================
-#                Build and Install RISC-V Front-End Server (fesvr)
+#                Build and Install RISC-V Emulator (QEMU)
 # ====================================================================
 
-job_start "Building fesvr"
+job_start "Building QEMU"
 
-mkdir_and_enter ${FESVR_BUILD_DIR}
+mkdir_and_enter ${QEMU_BUILD_DIR}
 
-if ! run_command ${TOP}/riscv-fesvr/configure \
+if ! run_command ${TOP}/qemu/configure \
            --prefix=${INSTALL_DIR} \
-           --target=${TARGET_TRIPLET}
+           --target-list=riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user
 then
-    error "Failed to configure fesvr"
-fi
-
-if ! run_command make install
-then
-    error "Failed to build and install fesvr"
-fi
-
-job_done
-
-
-# ====================================================================
-#                Build and Install RISC-V Proxy Kernel (pk)
-# ====================================================================
-
-job_start "Building pk (RISC-V Proxy Kernel)"
-
-mkdir_and_enter ${PK_BUILD_DIR}
-
-if ! run_command ${TOP}/riscv-pk/configure \
-           --prefix=${INSTALL_DIR} \
-           --host=${TARGET_TRIPLET} \
-           --with-arch=${WITH_ARCH} \
-           --with-abi=${WITH_ABI}
-then
-    error "Failed to configure pk"
+    error "Failed to configure QEMU"
 fi
 
 if ! run_command make
 then
-    error "Failed to build pk"
+    error "Failed to build QEMU"
 fi
 
 if ! run_command make install
 then
-    error "Failed to install pk"
+    error "Failed to install QEMU"
 fi
 
 job_done
 
-
 # ====================================================================
-#                Build and Install RISC-V ISA Simulator (SPIKE)
+#                Copy run scripts to install dir
 # ====================================================================
 
-job_start "Building RISC-V ISA Sim"
+job_start "Copying run scripts to install dir"
 
-mkdir_and_enter ${SPIKE_BUILD_DIR}
-
-if ! run_command ${TOP}/riscv-isa-sim/configure \
-           --prefix=${INSTALL_DIR} \
-           --with-fesvr=${INSTALL_DIR} \
-           --with-isa=${WITH_ARCH}
+if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv32-unknown-elf-run ${INSTALL_DIR}/bin
 then
-    error "Failed to configure SPIKE"
+    error "Failed to copy riscv32-unknown-elf-run"
 fi
 
-if ! run_command make
+if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv64-unknown-elf-run ${INSTALL_DIR}/bin
 then
-    error "Failed to build SPIKE"
-fi
-
-if ! run_command make install
-then
-    error "Failed to install SPIKE"
+    error "Failed to copy riscv64-unknown-elf-run"
 fi
 
 job_done

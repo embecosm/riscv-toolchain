@@ -40,7 +40,5 @@ git clone -b stack-erase ${BASE_URL}/riscv-binutils-gdb.git binutils-gdb
 git clone -b stack-erase ${BASE_URL}/riscv-gcc.git gcc
 git clone -b stack-erase ${BASE_URL}/riscv-newlib.git newlib
 
-# ISA Simulator
-git clone -b stack-erase ${BASE_URL}/riscv-pk.git riscv-pk
-git clone -b stack-erase ${BASE_URL}/riscv-fesvr.git riscv-fesvr
-git clone -b stack-erase ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
+# Emulator
+git clone -b stack-erase ${BASE_URL}/riscv-qemu.git qemu
