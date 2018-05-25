@@ -42,21 +42,15 @@ fi
 
 topdir=$(cd $(dirname $0)/..;pwd)
 
-repos="binutils:master                          \
+repos="binutils:riscv-workshop                  \
        gcc:embecosm-stable                      \
-       gdb:riscv-next                           \
+       gdb:master                               \
        newlib:bare-metal-hack                   \
-       dejagnu:riscv-dejagnu-1.6                \
-       gdbserver:orconf                         \
-       picorv32:orconf                          \
-       ri5cy:orconf                             \
-       riscv-pk:master                          \
-       riscv-fesvr:master                       \
-       riscv-isa-sim:master                     \
-       beebs:orconf                             \
-       riscv-tests:master                       \
-       berkeley-softfloat-3:master              \
-       berkeley-testfloat-3:master"
+       cgen:master                              \
+       gdbserver:riscv-workshop                 \
+       picorv32:riscv-workshop                  \
+       ri5cy:riscv-workshop                     \
+       riscv-isa-sim:master"
 
 for r in ${repos}
 do

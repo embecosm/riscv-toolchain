@@ -64,19 +64,18 @@ git clone -o ${EM} ${BASE_URL}/riscv-gcc.git gcc
 git clone -o ${EM} ${BASE_URL}/riscv-gdb.git gdb
 git clone -o ${EM} ${BASE_URL}/riscv-newlib.git newlib
 
+# now get cgen
+git clone -o ${EM} ${BASE_URL}/cgen.git cgen
+
 # now get those for testing/executing
 git clone -o ${EM} ${BASE_URL}/riscv-gdbserver.git gdbserver
 git clone -o ${EM} ${BASE_URL}/picorv32.git picorv32
 git clone -o ${EM} ${BASE_URL}/ri5cy.git ri5cy
-git clone -o ${EM} ${BASE_URL}/riscv-pk.git riscv-pk
-git clone -o ${EM} ${BASE_URL}/riscv-fesvr.git riscv-fesvr
+#git clone -o ${EM} ${BASE_URL}/riscv-pk.git riscv-pk
+#git clone -o ${EM} ${BASE_URL}/riscv-fesvr.git riscv-fesvr
 git clone -o ${EM} ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
 
-git clone -o ${EM} ${BASE_URL}/riscv-beebs.git beebs
-git clone -o ${EM} ${BASE_URL}/riscv-tests.git riscv-tests
-
-git clone -o ${EM} ${BASE_URL}/berkeley-softfloat-3 berkeley-softfloat-3
-git clone -o ${EM} ${BASE_URL}/berkeley-testfloat-3 berkeley-testfloat-3
+#git clone -o ${EM} ${BASE_URL}/riscv-tests.git riscv-tests
 
 # initialize the submodule for the test environment in riscv-tests
 cd riscv-tests
