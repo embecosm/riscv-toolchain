@@ -80,7 +80,8 @@ case ${opt} in
         echo "The default --with-target is 'riscv32-unknown-elf'."
         echo ""
         echo "The default for --with-board is 'riscv-sim', other"
-        echo "options are 'riscv-picorv32' or 'riscv-ri5cy'."
+        echo "options are 'riscv-picorv32', 'riscv-ri5cy' or"
+        echo "'freedom-e310-arty'."
         echo ""
         exit 1
         ;;
@@ -127,6 +128,7 @@ export DEJAGNU=${TOOLCHAIN_DIR}/site.exp
 
 # Start gdbserver
 GDBSERVER_PID=
+
 case "${TARGET_BOARD}" in
     riscv-picorv32|riscv-ri5cy)
 	# Set up and export any board parameters.
@@ -135,31 +137,51 @@ case "${TARGET_BOARD}" in
 	# We only start one gdbserver, so only run one test at a time.
 	PARALLEL=1
 
-        # Select the -c option to pass when starting gdbserver.
-        case "${TARGET_BOARD}" in
-            riscv-picorv32)
-                C_OPT="picorv32"
-                ;;
-            riscv-ri5cy)
-                C_OPT="RI5CY"
-                ;;
-            *)
-        esac
+    # Select the -c option to pass when starting gdbserver.
+    case "${TARGET_BOARD}" in
+        riscv-picorv32)
+            C_OPT="picorv32"
+            ;;
+        riscv-ri5cy)
+            C_OPT="RI5CY"
+            ;;
+        *)
+    esac
 
-        # Select common board name to select the dejagnu config file.
-        ORIGINAL_TARGET_BOARD=${TARGET_BOARD}
-        TARGET_BOARD=riscv-gdbserver
+    # Select common board name to select the dejagnu config file.
+    ORIGINAL_TARGET_BOARD=${TARGET_BOARD}
+    TARGET_BOARD=riscv-gdbserver
 
         echo ${INSTALL_DIR}/bin/riscv-gdbserver -c ${C_OPT} ${RISCV_NETPORT}
         ${INSTALL_DIR}/bin/riscv-gdbserver -c ${C_OPT} ${RISCV_NETPORT} & pid=$!
-	echo "Started GDB server on port ${RISCV_NETPORT} (process ${pid})"
-        GDBSERVER_PID=$pid
+        echo "Started GDB server on port ${RISCV_NETPORT} (process ${pid})"
+    GDBSERVER_PID=$pid
         ;;
 
     *)
 	PARALLEL=8
         ;;
 esac
+
+if [ "$(TARGET_BOARD)" = "freedom-e300-arty" ]
+then
+    export RISCV_NETPORT=3333
+
+    PARALLEL=1
+    
+    # Select common board name to select the dejagnu config file.
+    ORIGINAL_TARGET_BOARD=${TARGET_BOARD}
+    TARGET_BOARD=riscv-gdbserver
+
+    echo ${BUILD_DIR}/openocd/prefix/bin/openocd \
+        -f ${TOOLCHAIN_DIR}/openocd/freedom-e300-arty/openocd.cfg
+    ${BUILD_DIR}/openocd/prefix/bin/openocd \
+        -f ${TOOLCHAIN_DIR}/openocd/freedom-e300-arty/openocd.cfg & pid=$!gd
+    echo "Started OpenOCD server on port ${RISCV_NETPORT} (process ${pid})"
+    GDBSERVER_PID=$pid
+
+    PARALLEL=8
+fi
 
 TARGET_XLEN=
 case "${WITH_TARGET}" in

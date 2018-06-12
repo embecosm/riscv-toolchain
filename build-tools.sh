@@ -43,6 +43,7 @@ function usage () {
     echo "                        [--jobs <count>] [--load <load>]"
     echo "                        [--single-thread]"
     echo "                        [--gdbserver-only]"
+    echo "                        [--build-openocd]"
     echo "                        [--skip-gcc-stage-1]"
     echo "                        [--with-target <target>]"
     echo "                        [--with-arch <arch>]"
@@ -125,6 +126,10 @@ case ${opt} in
     --gdbserver-only)
 	GDBSERVER_ONLY=yes
 	;;
+
+    --build-openocd)
+  BUILD_OPENOCD=yes
+  ;;
 
     --debug)
 	DEBUG_BUILD=yes
@@ -218,11 +223,11 @@ fi
 
 # Check that we have a valid VERILATOR_DIR value, otherwise we'll not
 # spot until we try to build verilator.
-if [ -z "${VERILATOR_DIR}" -o ! -d "${VERILATOR_DIR}" ]
-then
-    echo "Failed to get header directory from verilator"
-    exit 1
-fi
+# if [ -z "${VERILATOR_DIR}" -o ! -d "${VERILATOR_DIR}" ]
+# then
+#     echo "Failed to get header directory from verilator"
+#     exit 1
+# fi
 
 # ====================================================================
 
@@ -246,6 +251,7 @@ GCC_STAGE_1_BUILD_DIR=${BUILD_DIR}/gcc-stage1
 GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage2
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
 GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
+OPENOCD_BUILD_DIR=${BUILD_DIR}/openocd
 DEJAGNU_BUILD_DIR=${BUILD_DIR}/dejagnu
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
@@ -689,73 +695,107 @@ fi
 #             Build GDB Server for provided targets
 # ====================================================================
 
-if [ -e "${PICORV32_BUILD_DIR}" ]
+# if [ -e "${PICORV32_BUILD_DIR}" ]
+# then
+#     echo "PICORV32 for GDBServer: ${PICORV32_BUILD_DIR}"
+# fi
+
+# if [ -e "${RI5CY_BUILD_DIR}" ]
+# then
+#     echo "   RI5CY for GDBServer: ${RI5CY_BUILD_DIR}"
+# fi
+
+# job_start "Building GDB Server for provided targets"
+
+# cd ${TOP}/gdbserver
+
+# if ! run_command autoreconf --install
+# then
+#     error "Failed to autoreconf for GDB Server"
+# fi
+
+# mkdir_and_enter ${GDBSERVER_BUILD_DIR}
+
+# GDBSERVER_CONFIG_ARGS="\
+#     --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
+#     --prefix=${INSTALL_PREFIX_DIR} \
+#     --with-xlen=${WITH_XLEN}"
+# if [ -e "${RI5CY_BUILD_DIR}" ]
+# then
+#     GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+#         --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
+#         --with-ri5cy-topmodule=top"
+# fi
+
+# if [ -e "${PICORV32_BUILD_DIR}" ]
+# then
+#     GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+#         --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
+#         --with-picorv32-topmodule=testbench"
+# fi
+
+# GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+#     --with-gdbsim-builddir=${GDB_BUILD_DIR}"
+
+# GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+#     --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/include"
+
+# if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
+# then
+#     error "Failed to configure GDB Server"
+# fi
+
+# if ! run_command make clean
+# then
+#     error "Failed to make clean for GDB Server"
+# fi
+
+# if ! run_command make
+# then
+#     error "Failed to build GDB Server"
+# fi
+
+# if ! run_command make install
+# then
+#     error "Failed to install GDB Server"
+# fi
+
+# job_done
+
+# ====================================================================
+#             Build OpenOCD for provided targets
+# ====================================================================
+
+job_start "Building OpenOCD"
+
+if [ "x${BUILD_OPENOCD}" = "xyes" ]
 then
-    echo "PICORV32 for GDBServer: ${PICORV32_BUILD_DIR}"
+    
+mkdir_and_enter ${OPENOCD_BUILD_DIR}  
+
+if ! run_command bootstrap
+then
+    error "Failed to bootstrap OpenOCD"
 fi
 
-if [ -e "${RI5CY_BUILD_DIR}" ]
+if ! run_command configure --prefix=${INSTALL_PREFIX_DIR}
 then
-    echo "   RI5CY for GDBServer: ${RI5CY_BUILD_DIR}"
+    error "Failed to bootstrap OpenOCD"
 fi
 
-job_start "Building GDB Server for provided targets"
-
-cd ${TOP}/gdbserver
-
-if ! run_command autoreconf --install
+if ! run_command make ${PARALLEL}
 then
-    error "Failed to autoreconf for GDB Server"
-fi
-
-mkdir_and_enter ${GDBSERVER_BUILD_DIR}
-
-GDBSERVER_CONFIG_ARGS="\
-    --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
-    --prefix=${INSTALL_PREFIX_DIR} \
-    --with-xlen=${WITH_XLEN}"
-if [ -e "${RI5CY_BUILD_DIR}" ]
-then
-    GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-        --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
-        --with-ri5cy-topmodule=top"
-fi
-
-if [ -e "${PICORV32_BUILD_DIR}" ]
-then
-    GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-        --with-picorv32-modeldir=${PICORV32_BUILD_DIR}/obj_dir \
-        --with-picorv32-topmodule=testbench"
-fi
-
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-gdbsim-builddir=${GDB_BUILD_DIR}"
-
-GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
-    --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/${TARGET_TRIPLET}/include"
-
-if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
-then
-    error "Failed to configure GDB Server"
-fi
-
-if ! run_command make clean
-then
-    error "Failed to make clean for GDB Server"
-fi
-
-if ! run_command make
-then
-    error "Failed to build GDB Server"
+    error "Failed to bootstrap OpenOCD"
 fi
 
 if ! run_command make install
 then
-    error "Failed to install GDB Server"
+    error "Failed to bootstrap OpenOCD"
+fi
+
 fi
 
 job_done
-
 
 # ====================================================================
 #                           Finished
