@@ -20,6 +20,7 @@ TARGET_BOARD=riscv-sim
 TARGET_SUBSET=
 TOOL=gcc
 COMMENT="none"
+IGNORE_TESTS="--ignore 'advance.exp asmlabel.exp async.exp bp-permanent.exp break.exp condbreak-call-false.exp condbreak.exp consecutive-step-over.exp display.exp finish.exp funcargs.exp func-ptrs.exp longjmp.exp sepdebug.exp mi-var-cmd.exp mi-var-cp.exp dbx.exp dprintf.exp ena-dis-br.exp gnu_vector.exp hbreak2.exp label.exp macscp.exp recurse.exp return2.exp return.exp return-nodebug.exp scope.exp sss-bp-on-user-bp.exp stale-infcall.exp step-line.exp step-symless.exp step-test.exp until.exp vla-datatypes.exp vla-ptr.exp watchpoint-cond-gone.exp watchpoint.exp dw2-dir-file-name.exp dw2-skip-prologue.exp thread.exp mi-break.exp mi-nonstop-exit.exp mi-exit-code.exp mi-simplerun.exp mi-dprintf.exp mi-frame-regs.exp mi-var-display.exp inline-cmds.exp py-frame.exp py-framefilter.exp py-frame-inline.exp py-prettyprint.exp py-strfns.exp py-symbol.exp gdb11479.exp'"
 
 # ====================================================================
 
@@ -81,7 +82,7 @@ case ${opt} in
         echo ""
         echo "The default for --with-board is 'riscv-sim', other"
         echo "options are 'riscv-picorv32', 'riscv-ri5cy' or"
-        echo "'freedom-e310-arty'."
+        echo "'riscv-freedom-e310-arty'."
         echo ""
         exit 1
         ;;
@@ -110,7 +111,7 @@ RESULTS_DIR=${TMP_RESULTS_DIR}
 
 # ====================================================================
 
-GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
+GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage2
 GDB_BUILD_DIR=${BUILD_DIR}/gdb
 
 # ====================================================================
@@ -123,7 +124,8 @@ export PATH=${INSTALL_DIR}/bin:$PATH
 # So that dejagnu can find the correct baseboard file (e.g. riscv-spike.exp)
 export DEJAGNULIBS=${TOP}/dejagnu
 export DEJAGNU=${TOOLCHAIN_DIR}/site.exp
-
+export DEJAGNU_LDSCRIPT=
+export DEJAGNU_BSP=${TOOLCHAIN_DIR}/bsp
 # ====================================================================
 
 # Start gdbserver
@@ -163,29 +165,21 @@ case "${TARGET_BOARD}" in
         ;;
 esac
 
-if [ "$(TARGET_BOARD)" = "freedom-e300-arty" ]
+if [ "${TARGET_BOARD}" = "riscv-freedom-e310-arty" ]
 then
     export RISCV_NETPORT=3333
+    export DEJAGNU_LDSCRIPT=-T${TOOLCHAIN_DIR}/boardsupport/freedom-e300-arty/flash.lds
+    export DEJAGNU_OPENOCD=${INSTALL_DIR}/bin/openocd
+    export DEJAGNU_OPENOCD_CFG=${TOOLCHAIN_DIR}/bsp/env/freedom-e300-arty/openocd.cfg
+    export DEJAGNU_OPENOCD_LOG=${RESULTS_DIR}/openocd.log
 
+    # We only start one gdbserver, so only run one test at a time.
     PARALLEL=1
-    
-    # Select common board name to select the dejagnu config file.
-    ORIGINAL_TARGET_BOARD=${TARGET_BOARD}
-    TARGET_BOARD=riscv-gdbserver
-
-    echo ${BUILD_DIR}/openocd/prefix/bin/openocd \
-        -f ${TOOLCHAIN_DIR}/openocd/freedom-e300-arty/openocd.cfg
-    ${BUILD_DIR}/openocd/prefix/bin/openocd \
-        -f ${TOOLCHAIN_DIR}/openocd/freedom-e300-arty/openocd.cfg & pid=$!gd
-    echo "Started OpenOCD server on port ${RISCV_NETPORT} (process ${pid})"
-    GDBSERVER_PID=$pid
-
-    PARALLEL=8
 fi
 
 TARGET_XLEN=
 case "${WITH_TARGET}" in
-    riscv32-unknown-elf)
+    riscv32-unknown-elf|riscv32imac-unknown-elf)
         TARGET_XLEN=32
         ;;
     riscv64-unknown-elf)
@@ -201,8 +195,8 @@ fi
 
 export RISCV_TIMEOUT=10
 export RISCV_GDB_TIMEOUT=10
-export RISCV_STACK_SIZE="4096"
-export RISCV_TEXT_SIZE="65536"
+export RISCV_STACK_SIZE="2048"
+export RISCV_TEXT_SIZE="65535"
 export RISCV_XLEN=${TARGET_XLEN}
 
 # ====================================================================
@@ -221,14 +215,14 @@ echo "Tool:               ${TOOL}"                           >> ${readme}
 
 case "${TOOL}" in
     gcc)
-        cd ${GCC_STAGE_2_BUILD_DIR}
-        make -j $PARALLEL check-gcc-c RUNTESTFLAGS="${TEST_SUBSET} --target=${WITH_TARGET} --target_board=${TARGET_BOARD}"
+    cd ${GCC_STAGE_2_BUILD_DIR}
+    make -j $PARALLEL check-gcc-c RUNTESTFLAGS="${TEST_SUBSET} --target=${WITH_TARGET} --target_board=${TARGET_BOARD} ${IGNORE_TESTS}"
 	cp ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.log ${RESULTS_DIR}/gcc.log
 	cp ${GCC_STAGE_2_BUILD_DIR}/gcc/testsuite/gcc/gcc.sum ${RESULTS_DIR}/gcc.sum
         ;;
     gdb)
-        cd ${GDB_BUILD_DIR}
-        make -j $PARALLEL check-gdb RUNTESTFLAGS="${TEST_SUBSET} --target=${WITH_TARGET} --target_board=${TARGET_BOARD}"
+    cd ${GDB_BUILD_DIR}
+    make -j $PARALLEL check-gdb RUNTESTFLAGS="${TEST_SUBSET} --target=${WITH_TARGET} --target_board=${TARGET_BOARD} ${IGNORE_TESTS}"
 	cp ${GDB_BUILD_DIR}/gdb/testsuite/gdb.log ${RESULTS_DIR}/gdb.log
 	cp ${GDB_BUILD_DIR}/gdb/testsuite/gdb.sum ${RESULTS_DIR}/gdb.sum
         ;;

@@ -1,0 +1,375 @@
+# Board specification for the RISC-V GDB server
+
+# Copyright (C) 2018 Embecosm Limited.
+
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3 of the License, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Delete these functions.
+rename gdbserver_gdb_load {}
+rename gdb_reload {}
+rename gdb_reconnect {}
+rename gdb_start {}
+rename mi_gdb_target_cmd {}
+rename mi_gdb_target_load {}
+rename mi_gdb_load {}
+# rename mi_expect_stop mi_expect_stop_orig
+rename mi_gdb_start mi_gdb_start_orig
+rename skip_gdbserver_tests {}
+
+proc gdb_reload_start_target { } {
+    global gdb_prompt
+    global GDBSERVER
+
+    # killall_openocd
+
+    set targetname "remote"
+    send_gdb "target remote | ${GDBSERVER}\n"
+    gdb_expect 60 {
+        -re "A program is being debugged already.*ill it.*y or n. $" {
+            send_gdb "y\n"
+            exp_continue
+        }
+        -re "Couldn't establish connection to remote.*$gdb_prompt $" {
+            verbose "Connection failed"
+        }
+        -re "Remote MIPS debugging.*$gdb_prompt" {
+            verbose "Set target to $targetname"
+            return 0
+        }
+        # -re "Remote debugging using.*\nOpen On-Chip Debugger.*\nLicensed.*\n.*bugs.html.*\nRemote communication error.*Target disconnected.*Connection reset by peer.*\n$gdb_prompt $" {
+        #     warning "Couldn't connect to target. Killing any running openocd processes already running."
+        #     killall_openocd
+        #     return 2
+        # }
+        -re "Remote debugging using.*$gdb_prompt $" {
+            verbose "Set target to $targetname (via openocd)"
+            return 0
+        }
+        -re "Remote target $targetname connected to.*$gdb_prompt $" {
+            verbose "Set target to $targetname"
+            return 0
+        }
+        -re "Connected to.*$gdb_prompt $" {
+            verbose "Set target to $targetname"
+            return 0
+        }
+        -re "Ending remote.*$gdb_prompt $" { }
+        -re "Connection refused.*$gdb_prompt $" {
+            verbose "Connection refused by remote target.  Pausing, and trying again."
+            sleep 30
+            continue
+        }
+        -re "Timeout reading from remote system.*$gdb_prompt $" {
+            verbose "Got timeout error from gdb."
+        }
+        -notransfer -re "Remote debugging using .*\r\n> $" {
+            # We got an unexpected prompt while creating the target.
+            # Leave it there for the test to diagnose.
+            return 1
+        }
+        timeout {
+            send_gdb ""
+            break
+        }
+    }
+
+    return 1
+}
+
+# proc monitor_resume { } {
+#     global gdb_prompt
+
+#     send_gdb "monitor resume\n"
+#     gdb_expect 10 {
+#         -re "halted at.*$gdb_prompt" {
+#             verbose "Resuming" 2
+#         }
+#         timeout {
+#             warning "Couldn't resume."
+#             return -1
+#         }
+#     }
+
+#     return 0
+# }
+
+proc monitor_reset_halt { } {
+    global gdb_prompt
+
+    send_gdb "monitor reset halt\n"
+    gdb_expect 10 {
+        -re "halted at.*$gdb_prompt" {
+            verbose "Resetting and halting the target" 2
+        }
+        timeout {
+            warning "Couldn't reset and halt the target."
+            return -1
+        }
+    }
+
+    return 0
+}
+
+proc monitor_flash_protect_off { } {
+    global gdb_prompt
+
+    send_gdb "monitor flash protect 0 64 last off\n"
+    gdb_expect 10 {
+        -re "cleared protection for sectors 64 through 255 on flash bank 0.*$gdb_prompt" {
+            verbose "Clearing flash protection" 2
+        }
+        timeout {
+            warning "Couldn't clear flash protection."
+            return -1
+        }
+    }
+
+    return 0
+}
+
+# proc start_openocd { } {
+#     global env
+#     global OPENOCD_PID
+    
+#     if [info exists OPENOCD_PID] {
+#         if [catch {close -i $OPENOCD_PID}] {
+#             warning "openocd_close: failed to close $OPENOCD_PID"
+#         }
+
+#         if [catch {wait -i $OPENOCD_PID}] {
+#             warning "openocd_close: failed to wait for $OPENOCD_PID"
+#         }
+#     }
+
+#     set OPENOCD_PID [spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) \
+#                                                  -l $env(DEJAGNU_OPENOCD_LOG)]
+#     warning "openocd spawned?"
+#     warning $OPENOCD_PID
+# }
+
+proc killall_openocd { } {
+    set runcmd [list exec killall -q openocd]
+    set status [catch {exec $runcmd} result]
+    if {$status < 0 || $status > 1} {
+        error "Failed to run command $runcmd: $res"
+    }
+    warning "Killing all running openocd processes"
+}
+
+proc gdb_reload { } {
+    global gdb_prompt
+
+    if [gdb_reload_start_target] {
+        return 1
+    }
+    monitor_reset_halt
+    monitor_flash_protect_off
+    gdb_load_cmd
+    
+}
+
+proc gdb_start { } {
+    global gdb_prompt
+
+    killall_openocd
+    
+    if [default_gdb_start] {
+        return -1
+    }
+
+    # this board only has 2 hardware breakpoints
+    send_gdb "set remote hardware-breakpoint-limit 2\n"
+    gdb_expect 10 {
+    -re "$gdb_prompt $" {
+        verbose "Setting hardware-breakpoint-limit to 2" 2
+    }
+    timeout {
+        warning "Couldn't set the hardware-breakpoint-limit to 2."
+            return -1
+        }
+    }
+
+    # force the width to "unlimited", so no wraparound occurs
+    send_gdb "set remote hardware-watchpoint-limit 0\n"
+    gdb_expect 10 {
+	-re "$gdb_prompt $" {
+	    verbose "Setting hardware-watchpoint-limit to 0" 2
+	}
+	timeout {
+	    warning "Couldn't set the hardware-watchpoint-limit to 0."
+            return -1
+	}
+    }
+
+    return 0
+}
+
+proc mi_gdb_start { args } {
+    killall_openocd
+
+    if [mi_gdb_start_orig args] {
+        return -1
+    }
+
+    return 0
+}
+
+proc mi_gdb_target_cmd { protocol options } {
+    global mi_gdb_prompt
+    global GDBSERVER
+
+    if [target_info exists gdb_load_timeout] {
+	set loadtimeout [target_info gdb_load_timeout]
+    } else {
+	set loadtimeout 1600
+    }
+
+    # killall_openocd
+
+    send_gdb "47-target-select remote | ${GDBSERVER}\n"
+    gdb_expect 60 {
+        -re "47\\^connected.*$mi_gdb_prompt" {
+        }
+        # -re "47\\^.*Remote communication error.*Target disconnected.*Connection reset by peer.\"" {
+        #     warning "COMS ERROR - KILL OPENOCD HERE AND TRY AGAIN 1"
+        # }
+        timeout {
+            perror "Unable to connect to remote target (timeout)"
+            return -1
+        }
+    }
+
+    send_gdb "48-gdb-set remote hardware-watchpoint-limit 0\n"
+    gdb_expect 10 {
+        -re "48\\^done.*$mi_gdb_prompt" {
+        }
+        timeout {
+            perror "Unable to set hardware-watchpoint-limit to 0."
+            return -1
+        }
+    }
+
+    return 0
+}
+
+#catch this, kill openocd and try again
+# 47^error,msg="Remote communication error.  Target disconnected.: Connectio
+# n reset by peer."
+
+#
+# connect to the target and download a file, if necessary.
+# return a -1 if anything goes wrong.
+#
+proc mi_gdb_target_load { } {
+    global mi_gdb_prompt
+    global GDBSERVER
+
+    if [target_info exists gdb_load_timeout] {
+    set loadtimeout [target_info gdb_load_timeout]
+    } else {
+    set loadtimeout 1600
+    }
+
+    # killall_openocd
+
+    send_gdb "47-target-select remote | ${GDBSERVER}\n"
+    gdb_expect 60 {
+        -re "47\\^connected.*$mi_gdb_prompt" {
+        }
+        # -re "47\\^.*Remote communication error.*Target disconnected.*Connection reset by peer.\"" {
+        #     warning "COMS ERROR - KILL OPENOCD HERE AND TRY AGAIN 2"
+        # }
+        timeout {
+            perror "Unable to connect to remote target (timeout)"
+            return -1
+        }
+    }
+
+    send_gdb "48-gdb-set remote hardware-watchpoint-limit 0\n"
+    gdb_expect 10 {
+        -re "48\\^done.*$mi_gdb_prompt" {
+        }
+        timeout {
+            perror "Unable to set hardware-watchpoint-limit to 0."
+            return -1
+        }
+    }
+
+    send_gdb "1000-interpreter-exec console \"monitor reset halt\"\n"
+    gdb_expect 10 {
+        -re "1000\\^done.*$mi_gdb_prompt" {
+            verbose "Resetting and halting the target" 2
+        }
+        timeout {
+            warning "Couldn't reset and halt the target."
+            return -1
+        }
+    }
+
+    send_gdb "1001-interpreter-exec console \"monitor flash protect 0 64 last off\"\n"
+    gdb_expect 10 {
+        -re "1001\\^done.*$mi_gdb_prompt" {
+            verbose "Clearing flash protection" 2
+        }
+        timeout {
+            warning "Couldn't clear flash protection."
+            return -1
+        }
+    }
+
+    send_gdb "48-target-download\n"
+    gdb_expect 60 {
+        -re "48\\^done.*$mi_gdb_prompt$" {
+        }
+        timeout {
+        perror "Unable to download to remote target (timeout)"
+        return -1
+        }
+    }
+    
+    # send_gdb "1002-interpreter-exec console \"monitor resume\"\n"
+    # gdb_expect 10 {
+    #     -re "1002\\^done.*$mi_gdb_prompt" {
+    #         verbose "Resuming" 2
+    #     }
+    #     timeout {
+    #         warning "Couldn't resume."
+    #         return -1
+    #     }
+    # }
+
+    return 0
+}
+
+proc mi_gdb_load { arg } {
+    # This is what the default does.
+    if { $arg != "" } {
+        mi_gdb_file_cmd $arg
+    }
+
+    mi_gdb_target_load
+}
+
+# proc mi_expect_stop { reason func args file line extra test } {
+#     if { $reason == "exited-normally" } {
+#         unsupported "$test (exit_is_unreliable)"
+#         return
+#     }
+
+#     return mi_expect_stop_orig reason func args file line extra test
+# }
+
+proc skip_gdbserver_tests { } {
+    return 1
+}

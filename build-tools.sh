@@ -770,15 +770,17 @@ job_start "Building OpenOCD"
 
 if [ "x${BUILD_OPENOCD}" = "xyes" ]
 then
-    
-mkdir_and_enter ${OPENOCD_BUILD_DIR}  
 
-if ! run_command bootstrap
+cd ${TOP}/openocd
+
+if ! run_command ${TOP}/openocd/bootstrap
 then
     error "Failed to bootstrap OpenOCD"
 fi
 
-if ! run_command configure --prefix=${INSTALL_PREFIX_DIR}
+mkdir_and_enter ${OPENOCD_BUILD_DIR}  
+
+if ! run_command ${TOP}/openocd/configure --prefix=${INSTALL_PREFIX_DIR}
 then
     error "Failed to bootstrap OpenOCD"
 fi
