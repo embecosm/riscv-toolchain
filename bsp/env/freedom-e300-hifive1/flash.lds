@@ -110,6 +110,11 @@ SECTIONS
     PROVIDE( _data_lma = . );
   } >flash AT>flash :flash
 
+  .gcc_except_table : ONLY_IF_RO
+  {
+    *(.gcc_except_table .gcc_except_table.*)
+  } >flash AT>flash :flash
+
   .dalign         :
   {
     . = ALIGN(4);
@@ -130,6 +135,11 @@ SECTIONS
     *(.srodata.cst4)
     *(.srodata.cst2)
     *(.srodata .srodata.*)
+  } >ram AT>flash :ram_init
+
+  .gcc_except_table : ONLY_IF_RW
+  {
+    *(.gcc_except_table .gcc_except_table.*)
   } >ram AT>flash :ram_init
 
   . = ALIGN(4);
