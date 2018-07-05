@@ -60,15 +60,12 @@ set_board_info cflags   "[libgloss_include_flags] [newlib_include_flags] \
         -I$env(DEJAGNU_BSP)/env/freedom-e300-arty"
 set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
-        -I$env(DEJAGNU_BSP)/include \
-        -I$env(DEJAGNU_BSP)/drivers/ \
-        -I$env(DEJAGNU_BSP)/env \
-        -I$env(DEJAGNU_BSP)/env/freedom-e300-arty \
         $env(DEJAGNU_BSP)/env/start.o \
         $env(DEJAGNU_BSP)/env/entry.o \
         $env(DEJAGNU_BSP)/drivers/plic/plic_driver.o \
         $env(DEJAGNU_BSP)/env/freedom-e300-arty/init.o \
         -nostartfiles \
+        -nostdlib \
         -Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=open -Wl,--wrap=lseek \
         -Wl,--wrap=read -Wl,--wrap=write -Wl,--wrap=fstat -Wl,--wrap=stat \
         -Wl,--wrap=close -Wl,--wrap=link -Wl,--wrap=unlink -Wl,--wrap=execve \
@@ -80,9 +77,11 @@ set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -Wl,--wrap=_unlink -Wl,--wrap=_execve -Wl,--wrap=_fork \
         -Wl,--wrap=_getpid -Wl,--wrap=_kill -Wl,--wrap=_wait \
         -Wl,--wrap=_isatty -Wl,--wrap=_times -Wl,--wrap=_sbrk \
-        -Wl,--wrap=__exit -Wl,--wrap=_puts -L. -Wl,--start-group \
-        $env(DEJAGNU_BSP)/env/freedom-e300-arty/libwrap.a -lc -Wl,--end-group \
-        -L$env(DEJAGNU_BSP)/env"
+        -Wl,--wrap=__exit -Wl,--wrap=_puts \
+        -L. -L$env(DEJAGNU_BSP)/env/freedom-e300-arty/ -L$env(DEJAGNU_BSP)/env \
+        -Wl,--start-group \
+        -lc  -lm -lstdc++ -lgcc -lwrap \
+        -Wl,--end-group"
 
 # This board doesn't use a linker script.
 set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/freedom-e300-arty/flash.lds"
