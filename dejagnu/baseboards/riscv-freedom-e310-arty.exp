@@ -136,7 +136,6 @@ set_board_info noargs 1
 set_board_info gdb,no_thread_names 1
 set_board_info gdb,no_self_modifying_code 1
 set_board_info gdb,do_reload_on_run 1
-set_board_info gdb,cannot_call_functions 1
 set_board_info gdb,skip_gdbserver_tests 1
 set_board_info gdb,exit_is_unreliable 1
 
