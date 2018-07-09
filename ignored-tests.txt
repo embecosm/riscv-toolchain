@@ -55,6 +55,44 @@ gdb.python/py-strfns.exp
 gdb.python/py-symbol.exp
 gdb.stabs/gdb11479.exp
 
+gdb.cp/temargs.exp
+gdb.cp/ovldbreak.exp
+gdb.cp/chained-calls.exp
+gdb.cp/method.exp
+gdb.cp/classes.exp
+gdb.cp/baseenum.exp
+gdb.cp/breakpoint.exp
+gdb.cp/shadow.exp
+gdb.cp/filename.exp
+gdb.cp/try_catch.exp
+gdb.cp/mb-ctor.exp
+gdb.cp/destrprint.exp
+gdb.cp/expand-sals.exp
+gdb.cp/extern-c.exp
+gdb.cp/m-data.exp
+gdb.cp/mb-inline.exp
+gdb.cp/member-name.exp
+gdb.cp/namespace.exp
+gdb.cp/exception.exp
+gdb.cp/nsnested.exp
+gdb.cp/nsnoimports.exp
+gdb.cp/ovsrch.exp
+gdb.cp/pr-1210.exp
+gdb.cp/pr17132.exp
+gdb.cp/rtti.exp
+gdb.cp/virtbase.exp
+gdb.cp/virtfunc.exp
+gdb.linespec/skip-two.exp
+gdb.python/py-breakpoint.exp
+gdb.python/py-value.exp
+
+tests with too many breakpoints kept
+
+gdb.base/duplicate-bp.exp - doesn't have any fails
+gdb.base/jump.exp - 2/10 tests fail due to not enough hw bp, but the
+                    test is kept because the remaining tests found
+                    found a real bug
+
 
 reason: run to exit
 
