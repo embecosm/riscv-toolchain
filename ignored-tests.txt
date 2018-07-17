@@ -86,12 +86,18 @@ gdb.linespec/skip-two.exp
 gdb.python/py-breakpoint.exp
 gdb.python/py-value.exp
 
+gdb.base/call-ar-st.exp
+gdb.base/call-sc.exp
+gdb.base/callfuncs.exp
+gdb.base/structs.exp
+
 tests with too many breakpoints kept
 
 gdb.base/duplicate-bp.exp - doesn't have any fails
 gdb.base/jump.exp - 2/10 tests fail due to not enough hw bp, but the
                     test is kept because the remaining tests found
                     found a real bug
+gdb.base/duplicate-bp.exp - gdb.cp/m-static.exp
 
 
 reason: run to exit
