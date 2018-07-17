@@ -20,7 +20,6 @@ TARGET_BOARD=riscv-sim
 TARGET_SUBSET=
 TOOL=gcc
 COMMENT="none"
-IGNORE_TESTS="--ignore 'store.exp advance.exp asmlabel.exp async.exp bp-permanent.exp break.exp condbreak-call-false.exp condbreak.exp consecutive-step-over.exp display.exp finish.exp funcargs.exp func-ptrs.exp longjmp.exp sepdebug.exp mi-var-cmd.exp mi-var-cp.exp dbx.exp dprintf.exp ena-dis-br.exp gnu_vector.exp hbreak2.exp label.exp macscp.exp recurse.exp return2.exp return.exp return-nodebug.exp scope.exp sss-bp-on-user-bp.exp stale-infcall.exp step-line.exp step-symless.exp step-test.exp until.exp vla-datatypes.exp vla-ptr.exp watchpoint-cond-gone.exp watchpoint.exp dw2-dir-file-name.exp dw2-skip-prologue.exp thread.exp mi-break.exp mi-nonstop-exit.exp mi-exit-code.exp mi-simplerun.exp mi-dprintf.exp mi-frame-regs.exp mi-var-display.exp inline-cmds.exp py-frame.exp py-framefilter.exp py-frame-inline.exp py-prettyprint.exp py-strfns.exp py-symbol.exp gdb11479.exp temargs.exp ovldbreak.exp chained-calls.exp method.exp classes.exp baseenum.exp breakpoint.exp shadow.exp filename.exp try_catch.exp mb-ctor.exp destrprint.exp expand-sals.exp extern-c.exp m-data.exp mb-inline.exp member-name.exp namespace.exp exception.exp nsnested.exp nsnoimports.exp ovsrch.exp pr-1210.exp pr17132.exp rtti.exp virtbase.exp virtfunc.exp skip-two.exp py-breakpoint.exp py-value.exp call-ar-st.exp call-sc.exp callfuncs.exp structs.exp'"
 
 # ====================================================================
 
@@ -165,17 +164,25 @@ case "${TARGET_BOARD}" in
         ;;
 esac
 
-if [ "${TARGET_BOARD}" = "riscv-freedom-e310-arty" ]
-then
-    export RISCV_NETPORT=3333
-    export DEJAGNU_LDSCRIPT=-T${TOOLCHAIN_DIR}/boardsupport/freedom-e300-arty/flash.lds
+case "${TARGET_BOARD}" in
+    riscv-freedom-e310-arty|riscv-coreplexip-e31-arty)
+
     export DEJAGNU_OPENOCD=${INSTALL_DIR}/bin/openocd
-    export DEJAGNU_OPENOCD_CFG=${TOOLCHAIN_DIR}/bsp/env/freedom-e300-arty/openocd.cfg
     export DEJAGNU_OPENOCD_LOG=${RESULTS_DIR}/openocd.log
+
+    case "${TARGET_BOARD}" in
+        riscv-freedom-e310-arty)
+            IGNORE_TESTS="--ignore 'store.exp advance.exp asmlabel.exp async.exp bp-permanent.exp break.exp condbreak-call-false.exp condbreak.exp consecutive-step-over.exp display.exp finish.exp funcargs.exp func-ptrs.exp longjmp.exp sepdebug.exp mi-var-cmd.exp mi-var-cp.exp dbx.exp dprintf.exp ena-dis-br.exp gnu_vector.exp hbreak2.exp label.exp macscp.exp recurse.exp return2.exp return.exp return-nodebug.exp scope.exp sss-bp-on-user-bp.exp stale-infcall.exp step-line.exp step-symless.exp step-test.exp until.exp vla-datatypes.exp vla-ptr.exp watchpoint-cond-gone.exp watchpoint.exp dw2-dir-file-name.exp dw2-skip-prologue.exp thread.exp mi-break.exp mi-nonstop-exit.exp mi-exit-code.exp mi-simplerun.exp mi-dprintf.exp mi-frame-regs.exp mi-var-display.exp inline-cmds.exp py-frame.exp py-framefilter.exp py-frame-inline.exp py-prettyprint.exp py-strfns.exp py-symbol.exp gdb11479.exp temargs.exp ovldbreak.exp chained-calls.exp method.exp classes.exp baseenum.exp breakpoint.exp shadow.exp filename.exp try_catch.exp mb-ctor.exp destrprint.exp expand-sals.exp extern-c.exp m-data.exp mb-inline.exp member-name.exp namespace.exp exception.exp nsnested.exp nsnoimports.exp ovsrch.exp pr-1210.exp pr17132.exp rtti.exp virtbase.exp virtfunc.exp skip-two.exp py-breakpoint.exp py-value.exp call-ar-st.exp call-sc.exp callfuncs.exp structs.exp'"
+            ;;
+        riscv-coreplexip-e31-arty)
+            IGNORE_TESTS="--ignore 'mi-break.exp mi-nonstop-exit.exp mi-exit-code.exp mi-simplerun.exp'"
+            ;;
+    esac
 
     # We only start one gdbserver, so only run one test at a time.
     PARALLEL=1
-fi
+        ;;
+esac
 
 TARGET_XLEN=
 case "${WITH_TARGET}" in

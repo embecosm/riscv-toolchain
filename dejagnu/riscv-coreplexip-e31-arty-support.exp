@@ -189,25 +189,25 @@ proc gdb_start { } {
     }
 
     # this board only has 2 hardware breakpoints
-    send_gdb "set remote hardware-breakpoint-limit 2\n"
+    send_gdb "set remote hardware-breakpoint-limit 4\n"
     gdb_expect 10 {
     -re "$gdb_prompt $" {
-        verbose "Setting hardware-breakpoint-limit to 2" 2
+        verbose "Setting hardware-breakpoint-limit to 4" 2
     }
     timeout {
-        warning "Couldn't set the hardware-breakpoint-limit to 2."
+        warning "Couldn't set the hardware-breakpoint-limit to 4."
             return -1
         }
     }
 
     # force the width to "unlimited", so no wraparound occurs
-    send_gdb "set remote hardware-watchpoint-limit 2\n"
+    send_gdb "set remote hardware-watchpoint-limit 4\n"
     gdb_expect 10 {
 	-re "$gdb_prompt $" {
-	    verbose "Setting hardware-watchpoint-limit to 2" 2
+	    verbose "Setting hardware-watchpoint-limit to 4" 2
 	}
 	timeout {
-	    warning "Couldn't set the hardware-watchpoint-limit to 2."
+	    warning "Couldn't set the hardware-watchpoint-limit to 4."
             return -1
 	}
     }
@@ -250,12 +250,12 @@ proc mi_gdb_target_cmd { protocol options } {
         }
     }
 
-    send_gdb "48-gdb-set remote hardware-watchpoint-limit 2\n"
+    send_gdb "48-gdb-set remote hardware-watchpoint-limit 4\n"
     gdb_expect 10 {
         -re "48\\^done.*$mi_gdb_prompt" {
         }
         timeout {
-            perror "Unable to set hardware-watchpoint-limit to 2."
+            perror "Unable to set hardware-watchpoint-limit to 4."
             return -1
         }
     }
@@ -296,12 +296,12 @@ proc mi_gdb_target_load { } {
         }
     }
 
-    send_gdb "48-gdb-set remote hardware-watchpoint-limit 2\n"
+    send_gdb "48-gdb-set remote hardware-watchpoint-limit 4\n"
     gdb_expect 10 {
         -re "48\\^done.*$mi_gdb_prompt" {
         }
         timeout {
-            perror "Unable to set hardware-watchpoint-limit to 2."
+            perror "Unable to set hardware-watchpoint-limit to 4."
             return -1
         }
     }

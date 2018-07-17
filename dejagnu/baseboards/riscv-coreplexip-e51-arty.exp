@@ -1,4 +1,4 @@
-# Board specification for the RISC-V Freedom E310 Arty FPGA
+# Board specification for the RISC-V Freedom E510 Arty FPGA
 
 # Copyright (C) 2018 Embecosm Limited.
 
@@ -36,7 +36,7 @@ set_board_info target_install {$target_triplet}
 # the generic config file.
 #
 # 1. Setup GENERIC_NAME
-set_board_info generic_name "freedom-e310-arty"
+set_board_info generic_name "coreplexip-e51-arty"
 # 2. Override LOAD_TOOL_TARGET_CONFIG
 rename load_tool_target_config { }
 proc load_tool_target_config { name } { }
@@ -45,7 +45,7 @@ search_and_load_file "generic interface file" "gdbserver.exp" "${srcdir}/config"
 
 # Load some additional helper configuration files.
 load_board_description "gdbserver-base"
-load_board_description "riscv-freedom-e310-arty-support"
+load_board_description "riscv-coreplexip-e51-arty-support"
 
 # The compiler used to build for this board. This has *nothing* to do
 # with what compiler is tested if we're testing gcc.
@@ -53,17 +53,17 @@ set_board_info compiler "[find_gcc]"
 
 # I also supplied cflags and ldflags along the same lines as riscv-sim
 set_board_info cflags   "[libgloss_include_flags] [newlib_include_flags] \
-        -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
+        -fno-builtin-printf -march=rv64imac -mabi=lp64 \
         -I$env(DEJAGNU_BSP)/include \
         -I$env(DEJAGNU_BSP)/drivers/ \
         -I$env(DEJAGNU_BSP)/env \
-        -I$env(DEJAGNU_BSP)/env/freedom-e300-arty"
+        -I$env(DEJAGNU_BSP)/env/coreplexip-e51-arty"
 set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
-        -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
-        $env(DEJAGNU_BSP)/env/start.o \
-        $env(DEJAGNU_BSP)/env/entry.o \
-        $env(DEJAGNU_BSP)/drivers/plic/plic_driver.o \
-        $env(DEJAGNU_BSP)/env/freedom-e300-arty/init.o \
+        -fno-builtin-printf -march=rv64imac -mabi=lp64 \
+        $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/start.o \
+        $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/entry.o \
+        $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/plic_driver.o \
+        $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/init.o \
         -nostartfiles \
         -nostdlib \
         -Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=open -Wl,--wrap=lseek \
@@ -78,13 +78,13 @@ set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -Wl,--wrap=_getpid -Wl,--wrap=_kill -Wl,--wrap=_wait \
         -Wl,--wrap=_isatty -Wl,--wrap=_times -Wl,--wrap=_sbrk \
         -Wl,--wrap=__exit -Wl,--wrap=_puts \
-        -L. -L$env(DEJAGNU_BSP)/env/freedom-e300-arty/ -L$env(DEJAGNU_BSP)/env \
+        -L. -L$env(DEJAGNU_BSP)/env/coreplexip-e51-arty/ -L$env(DEJAGNU_BSP)/env \
         -Wl,--start-group \
         -lc  -lm -lstdc++ -lgcc -lwrap \
         -Wl,--end-group"
 
 # This board doesn't use a linker script.
-set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/freedom-e300-arty/flash.lds"
+set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/coreplexip-e51-arty/scratchpad.lds"
 
 # The flavors of debug we support
 set DEBUG_TORTURE_OPTIONS {-gdwarf-2}
@@ -109,12 +109,12 @@ set_board_info gdb_protocol "remote"
 set_board_info gdb,start_symbol "_start"
 set_board_info gdb,remote_timeout [riscv_env_var RISCV_TIMEOUT 60]
 
-set riscv_xlen [riscv_env_var RISCV_XLEN 32]
+set riscv_xlen [riscv_env_var RISCV_XLEN 64]
 
 set_board_info use_gdb_stub 1
 
 set GDB "riscv${riscv_xlen}-unknown-elf-gdb"
-set OPENOCD_CFG "$env(DEJAGNU_BSP)/env/freedom-e300-arty/openocd.cfg"
+set OPENOCD_CFG "$env(DEJAGNU_BSP)/env/coreplexip-e51-arty/openocd.cfg"
 set GDBSERVER "$env(DEJAGNU_OPENOCD) -f $OPENOCD_CFG -c 'gdb_port pipe' -l $env(DEJAGNU_OPENOCD_LOG)"
 
 # RISCV_TRACE contains a comma separated list of trace flags, martial them
