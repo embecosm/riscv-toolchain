@@ -1,0 +1,10 @@
+reason: too many breakpoints
+
+gdb.base/break.exp
+
+reason: run to exit
+
+gdb.mi/mi-break.exp
+gdb.mi/mi-nonstop-exit.exp
+gdb.mi/mi-exit-code.exp
+gdb.mi/mi-simplerun.exp
