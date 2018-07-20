@@ -84,7 +84,7 @@ set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -Wl,--end-group"
 
 # This board doesn't use a linker script.
-set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/coreplexip-e31-arty/scratchpad.lds"
+set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/coreplexip-e31-arty/flash.lds"
 
 # The flavors of debug we support
 set DEBUG_TORTURE_OPTIONS {-gdwarf-2}
