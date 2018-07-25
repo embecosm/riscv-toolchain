@@ -31,14 +31,11 @@
 # Set the top level directory.
 topdir=$(cd $(dirname $0)/..;pwd)
 
-BASE_URL=git@github.com:embecosm
-
 cd ${topdir}
 
 # Toolchain
-git clone -b stack-erase ${BASE_URL}/riscv-binutils-gdb.git binutils-gdb
-git clone -b stack-erase ${BASE_URL}/riscv-gcc.git gcc
-git clone -b stack-erase ${BASE_URL}/riscv-newlib.git newlib
-
-# Emulator
-git clone -b stack-erase ${BASE_URL}/riscv-qemu.git qemu
+git clone -b balancing git@github.com:embecosm/riscv-binutils-gdb.git binutils-gdb
+git clone -b balancing git@github.com:embecosm/riscv-gcc.git gcc
+git clone -b balancing git@github.com:embecosm/riscv-newlib.git newlib
+git clone -b balancing git@github.com:embecosm/ri5cy.git ri5cy
+git clone -b balancing git@github.com:embecosm/riscv-gdbserver.git gdbserver
