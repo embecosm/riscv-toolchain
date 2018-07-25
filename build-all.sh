@@ -10,6 +10,8 @@ DEBUG_BUILD=no
 STACK_ERASE=no
 BUILD_DIR=${TOP}/build
 INSTALL_DIR=${TOP}/install
+VERILATOR_DIR=`pkg-config --variable=prefix verilator`
+
 
 # ====================================================================
 
@@ -251,6 +253,10 @@ GCC_STAGE_2_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 GCC_NATIVE_BUILD_DIR=${BUILD_DIR}/gcc-native
 NEWLIB_BUILD_DIR=${BUILD_DIR}/newlib
 QEMU_BUILD_DIR=${BUILD_DIR}/qemu
+RI5CY_BUILD_DIR=${BUILD_DIR}/ri5cy
+GDBSERVER_BUILD_DIR=${BUILD_DIR}/gdbserver
+
+RI5CY_SRC_DIR=${TOP}/ri5cy
 
 INSTALL_PREFIX_DIR=${INSTALL_DIR}
 INSTALL_SYSCONF_DIR=${INSTALL_DIR}/etc
@@ -325,7 +331,8 @@ if ! run_command ${TOP}/binutils-gdb/configure \
          --with-sysroot=${SYSROOT_DIR} \
          --enable-poison-system-directories \
          --disable-tls \
-         --disable-sim
+         --disable-sim \
+         --enable-shared
 then
     error "Failed to configure binutils and GDB"
 fi
@@ -501,33 +508,69 @@ fi
 
 job_done
 
-
 # ====================================================================
-#                Build and Install RISC-V Emulator (QEMU)
+#                         Verilate RI5CY
 # ====================================================================
 
-job_start "Building QEMU"
+job_start "Verilating RI5CY"
 
-mkdir_and_enter ${QEMU_BUILD_DIR}
+rm -rf ${RI5CY_BUILD_DIR}
 
-if ! run_command ${TOP}/qemu/configure \
-           --prefix=${INSTALL_DIR} \
-           --target-list=riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user
+mkdir_and_enter ${RI5CY_BUILD_DIR}
+
+if ! run_command cp -r ${RI5CY_SRC_DIR}/* ${RI5CY_BUILD_DIR}
 then
-    error "Failed to configure QEMU"
+    error "Failed to copy files for RI5CY build"
+fi
+
+enter_dir ${RI5CY_BUILD_DIR}/verilator-model
+
+if ! run_command make
+then
+    error "Failed to verilate R15CY"
+fi
+
+job_done
+
+
+# ====================================================================
+#             Build GDB Server for provided targets
+# ====================================================================
+
+job_start "Building GDB Server for provided targets"
+
+cd ${TOP}/gdbserver
+
+mkdir_and_enter ${GDBSERVER_BUILD_DIR}
+
+GDBSERVER_CONFIG_ARGS="\
+    --with-verilator-headers=${VERILATOR_DIR}/share/verilator/include \
+    --prefix=${TOP}/install"
+GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+    --with-ri5cy-modeldir=${RI5CY_BUILD_DIR}/verilator-model/obj_dir \
+    --with-ri5cy-topmodule=top"
+GDBSERVER_CONFIG_ARGS="${GDBSERVER_CONFIG_ARGS} \
+    --with-binutils-incdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/riscv32-unknown-elf/include \
+    --with-binutils-libdir=${INSTALL_DIR}/x86_64-pc-linux-gnu/riscv32-unknown-elf/lib"
+
+
+if ! run_command ${TOP}/gdbserver/configure ${GDBSERVER_CONFIG_ARGS}
+then
+    error "Failed to configure GDB Server"
 fi
 
 if ! run_command make
 then
-    error "Failed to build QEMU"
+    error "Failed to build GDB Server"
 fi
 
 if ! run_command make install
 then
-    error "Failed to install QEMU"
+    error "Failed to install GDB Server"
 fi
 
 job_done
+
 
 # ====================================================================
 #                Copy run scripts to install dir
