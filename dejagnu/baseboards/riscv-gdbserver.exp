@@ -109,3 +109,5 @@ set_board_info gdb,no_self_modifying_code 1
 set_board_info gdb,do_reload_on_run 1
 
 set_board_info debug_flags "-g3"
+
+load_board_description "riscv-dwarf-unwinders"

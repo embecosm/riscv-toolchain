@@ -1,0 +1,76 @@
+# Copyright (C) 2018 Embecosm Limited.
+
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3 of the License, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Provide support for disabling the DWARF unwinders in GDB.  Useful
+# when you want to test the non-DWARF stack unwinding.
+#
+# Set the environment variable RISCV_NO_DWARF_UNWINDERS to disable
+# DWARF unwinders.
+
+# We must load this explicitly here, and rename the procedures we want
+# to override.  If we didn't do this, given that mi-support.exp is
+# loaded later in the test files, the procedures loaded then would
+# override our definitions.
+load_lib mi-support.exp
+
+if { [info exists env(RISCV_NO_DWARF_UNWINDERS) ] } {
+    set_board_info gdb,no_dwarf_unwinders 1
+}
+
+rename gdb_file_cmd old_gdb_file_cmd
+proc gdb_file_cmd { arg } {
+    set result [old_gdb_file_cmd $arg]
+
+    if [target_info exists gdb,no_dwarf_unwinders] {
+        global gdb_prompt
+
+        send_gdb "maint set dwarf unwinders off\n"
+        gdb_expect 120 {
+            -re "$gdb_prompt $" {
+            }
+            timeout {
+                perror "Couldn't disable DWARF stack unwinders (timeout)"
+            }
+            eof {
+                perror "Couldn't disable DWARF stack unwinders (eof)"
+            }
+        }
+    }
+
+    return $result
+}
+
+rename mi_gdb_file_cmd old_mi_gdb_file_cmd
+proc mi_gdb_file_cmd { arg } {
+    set result [old_mi_gdb_file_cmd $arg]
+
+    if [target_info exists gdb,no_dwarf_unwinders] {
+        global mi_gdb_prompt
+
+        send_gdb "maint set dwarf unwinders off\n"
+        gdb_expect 120 {
+            -re "$mi_gdb_prompt$" {
+            }
+            timeout {
+                perror "Couldn't disable DWARF stack unwinders (timeout)"
+            }
+            eof {
+                perror "Couldn't disable DWARF stack unwinders (eof)"
+            }
+        }
+    }
+
+    return $result
+}
