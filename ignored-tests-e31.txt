@@ -1,10 +1,36 @@
 reason: too many breakpoints
 
-gdb.base/break.exp
+	gdb.base/break.exp
+	gdb.base/dw2-dir-file-name.exp
+	gdb.base/return2.exp
+	gdb.cp/ovldbreak.exp
+	gdb.cp/temargs.exp
+	gdb.opt/inline-cmds.exp
+	gdb.base/condbreak.exp
+	gdb.base/finish.exp
+	gdb.base/func-ptrs.exp
+	gdb.base/funcargs.exp
+	gdb.base/macscp.exp
+	gdb.base/sepdebug.exp
+
+kept (small number of fails, useful test):
+
+	gdb.base/consecutive-step-over.exp - 1 fail
+	gdb.base/classes.exp
+
+need to check or adjust hw wp lim:
+
+	gdb.base/recurse.exp - adjust hw wp lim?
+	gdb.base/watchpoint.exp
+	gdb.base/watch-bitfields.exp
 
 reason: run to exit
 
-gdb.mi/mi-break.exp
-gdb.mi/mi-nonstop-exit.exp
-gdb.mi/mi-exit-code.exp
-gdb.mi/mi-simplerun.exp
+	gdb.mi/mi-break.exp
+	gdb.mi/mi-nonstop-exit.exp
+	gdb.mi/mi-exit-code.exp
+	gdb.mi/mi-simplerun.exp
+
+reason: gcc bug
+
+	store.exp

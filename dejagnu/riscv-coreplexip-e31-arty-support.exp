@@ -31,58 +31,65 @@ proc gdb_reload_start_target { } {
     global gdb_prompt
     global GDBSERVER
 
-    # killall_openocd
-
     set targetname "remote"
-    send_gdb "target remote | ${GDBSERVER}\n"
-    gdb_expect 60 {
-        -re "A program is being debugged already.*ill it.*y or n. $" {
-            send_gdb "y\n"
-            exp_continue
-        }
-        -re "Couldn't establish connection to remote.*$gdb_prompt $" {
-            verbose "Connection failed"
-        }
-        -re "Remote MIPS debugging.*$gdb_prompt" {
-            verbose "Set target to $targetname"
-            return 0
-        }
-        # -re "Remote debugging using.*\nOpen On-Chip Debugger.*\nLicensed.*\n.*bugs.html.*\nRemote communication error.*Target disconnected.*Connection reset by peer.*\n$gdb_prompt $" {
-        #     warning "Couldn't connect to target. Killing any running openocd processes already running."
-        #     killall_openocd
-        #     return 2
-        # }
-        -re "Remote debugging using.*$gdb_prompt $" {
-            verbose "Set target to $targetname (via openocd)"
-            return 0
-        }
-        -re "Remote target $targetname connected to.*$gdb_prompt $" {
-            verbose "Set target to $targetname"
-            return 0
-        }
-        -re "Connected to.*$gdb_prompt $" {
-            verbose "Set target to $targetname"
-            return 0
-        }
-        -re "Ending remote.*$gdb_prompt $" { }
-        -re "Connection refused.*$gdb_prompt $" {
-            verbose "Connection refused by remote target.  Pausing, and trying again."
-            sleep 30
-            continue
-        }
-        -re "Timeout reading from remote system.*$gdb_prompt $" {
-            verbose "Got timeout error from gdb."
-        }
-        -notransfer -re "Remote debugging using .*\r\n> $" {
-            # We got an unexpected prompt while creating the target.
-            # Leave it there for the test to diagnose.
-            return 1
-        }
-        timeout {
-            send_gdb ""
-            break
-        }
+
+    start_openocd
+    for {set i 1} {$i <= 3} {incr i} {
+	    send_gdb "target remote ${GDBSERVER}\n"
+	    gdb_expect 10 {
+	        -re "A program is being debugged already.*ill it.*y or n. $" {
+	            send_gdb "y\n"
+	            sleep 1
+	            exp_continue
+	        }
+	        -re "Couldn't establish connection to remote.*$gdb_prompt $" {
+	            verbose "Connection failed"
+	        }
+	        -re "Remote MIPS debugging.*$gdb_prompt" {
+	            verbose "Set target to $targetname"
+	            return 0
+	        }
+	        -re "Remote debugging using.*Remote communication error.*$gdb_prompt $" {
+	            warning "Trying to restart OpenOCD"
+	            start_openocd
+	            sleep 2
+	            exp_continue
+	            return 0
+	        }
+	        -re "Remote debugging using.*warning: Target-supplied registers.*$gdb_prompt $" {
+	            verbose "Set target to $targetname (via openocd)"
+	            return 0
+	        }
+	        -re "Remote target $targetname connected to.*$gdb_prompt $" {
+	            verbose "Set target to $targetname"
+	            return 0
+	        }
+	        -re "Connected to.*$gdb_prompt $" {
+	            verbose "Set target to $targetname"
+	            return 0
+	        }
+	        -re "Ending remote.*$gdb_prompt $" { }
+	        -re "Connection refused.*$gdb_prompt $" {
+	            verbose "Connection refused by remote target.  Pausing, and trying again."
+	            sleep 30
+	            continue
+	        }
+	        -re "Timeout reading from remote system.*$gdb_prompt $" {
+	            verbose "Got timeout error from gdb."
+	        }
+	        -notransfer -re "Remote debugging using .*\r\n> $" {
+	            # We got an unexpected prompt while creating the target.
+	            # Leave it there for the test to diagnose.
+	            return 1
+	        }
+	        timeout {
+	        	# try again in two seconds
+				sleep 2
+				continue
+	        }
+	    }
     }
+
 
     return 1
 }
@@ -138,25 +145,39 @@ proc monitor_flash_protect_off { } {
     return 0
 }
 
-# proc start_openocd { } {
-#     global env
-#     global OPENOCD_PID
+proc start_openocd { } {
+    global env
+    global openocd_pid
+    global gdb_test_file_name
     
-#     if [info exists OPENOCD_PID] {
-#         if [catch {close -i $OPENOCD_PID}] {
-#             warning "openocd_close: failed to close $OPENOCD_PID"
-#         }
+    #TODO kill by PID
+    # killall_openocd
 
-#         if [catch {wait -i $OPENOCD_PID}] {
-#             warning "openocd_close: failed to wait for $OPENOCD_PID"
-#         }
-#     }
+    warning "Restarting OpenOCD..."
 
-#     set OPENOCD_PID [spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) \
-#                                                  -l $env(DEJAGNU_OPENOCD_LOG)]
-#     warning "openocd spawned?"
-#     warning $OPENOCD_PID
-# }
+    if [info exists openocd_pid] {
+        if [catch {close -i $openocd_pid}] {
+            warning "openocd_close: failed to close $openocd_pid"
+        }
+
+        if [catch {wait -i $openocd_pid}] {
+            warning "openocd_close: failed to wait for $openocd_pid"
+        }
+    }
+
+
+    set timestamp [timestamp -format "%m-%d-%Y:%H:%M:%S"]
+    spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) -d --log_output openocd-$gdb_test_file_name.log
+    set openocd_pid $spawn_id
+
+    sleep 0.1
+
+    # set OPENOCD_PID [spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG)]
+
+    # warning "openocd spawned?"   
+    # warning $OPENOCD_PID
+    warning $openocd_pid
+}
 
 proc killall_openocd { } {
     set runcmd [list exec killall -q openocd]
@@ -176,14 +197,11 @@ proc gdb_reload { } {
     monitor_reset_halt
     monitor_flash_protect_off
     gdb_load_cmd
-    
 }
 
 proc gdb_start { } {
     global gdb_prompt
 
-    killall_openocd
-    
     if [default_gdb_start] {
         return -1
     }
@@ -216,8 +234,6 @@ proc gdb_start { } {
 }
 
 proc mi_gdb_start { args } {
-    killall_openocd
-
     if [mi_gdb_start_orig args] {
         return -1
     }
@@ -235,10 +251,10 @@ proc mi_gdb_target_cmd { protocol options } {
 	set loadtimeout 1600
     }
 
-    # killall_openocd
+    start_openocd
 
-    send_gdb "47-target-select remote | ${GDBSERVER}\n"
-    gdb_expect 60 {
+    send_gdb "47-target-select remote ${GDBSERVER}\n"
+    gdb_expect 10 {
         -re "47\\^connected.*$mi_gdb_prompt" {
         }
         # -re "47\\^.*Remote communication error.*Target disconnected.*Connection reset by peer.\"" {
@@ -281,10 +297,10 @@ proc mi_gdb_target_load { } {
     set loadtimeout 1600
     }
 
-    # killall_openocd
+    start_openocd
 
-    send_gdb "47-target-select remote | ${GDBSERVER}\n"
-    gdb_expect 60 {
+    send_gdb "47-target-select remote ${GDBSERVER}\n"
+    gdb_expect 10 {
         -re "47\\^connected.*$mi_gdb_prompt" {
         }
         # -re "47\\^.*Remote communication error.*Target disconnected.*Connection reset by peer.\"" {

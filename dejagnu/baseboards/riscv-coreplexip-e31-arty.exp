@@ -114,8 +114,7 @@ set riscv_xlen [riscv_env_var RISCV_XLEN 32]
 set_board_info use_gdb_stub 1
 
 set GDB "riscv${riscv_xlen}-unknown-elf-gdb"
-set OPENOCD_CFG "$env(DEJAGNU_BSP)/env/coreplexip-e31-arty/openocd.cfg"
-set GDBSERVER "$env(DEJAGNU_OPENOCD) -f $OPENOCD_CFG -c 'gdb_port pipe' -l $env(DEJAGNU_OPENOCD_LOG)"
+set GDBSERVER ":$env(RISCV_NETPORT)"
 
 # RISCV_TRACE contains a comma separated list of trace flags, martial them
 # into a tcl list in the board_info here.
