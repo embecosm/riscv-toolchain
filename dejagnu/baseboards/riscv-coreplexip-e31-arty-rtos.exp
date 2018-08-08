@@ -1,0 +1,145 @@
+# Board specification for the RISC-V Freedom E310 Arty FPGA
+
+# Copyright (C) 2018 Embecosm Limited.
+
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3 of the License, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+set_board_info target_install {$target_triplet}
+
+# Load the generic routines for talking to GDBServer
+# load_generic_config "gdbserver"
+
+# Most baseboard files will use LOAD_GENERIC_CONFIG here, however,
+# that doesn't really do the right thing.  The set of directories that
+# it looks in means that it will not find the generic config file.
+# Instead, all it does is set the GENERIC_NAME attribute on
+# BOARD_INFO, which in turn causes the generic config file to be
+# loaded later.  This is bad, as we want to override some of the
+# functions defined in the generic config file.
+#
+# The solution here is to do a couple of things, first, we avoid
+# LOAD_GENERIC_CONFIG, and set the GENERIC_NAME ourselves.  Then we
+# override the function LOAD_TOOL_TARGET_CONFIG, this is defined in
+# core runtest.exp and is what does the second loading of the generic
+# config file.  Finally, we use SEARCH_AND_LOAD_FILE in order to load
+# the generic config file.
+#
+# 1. Setup GENERIC_NAME
+set_board_info generic_name "coreplexip-e31-arty"
+# 2. Override LOAD_TOOL_TARGET_CONFIG
+rename load_tool_target_config { }
+proc load_tool_target_config { name } { }
+# 3. Load generic config with SEARCH_AND_LOAD_FILE
+search_and_load_file "generic interface file" "gdbserver.exp" "${srcdir}/config"
+
+# Load some additional helper configuration files.
+load_board_description "gdbserver-base"
+load_board_description "riscv-coreplexip-e31-arty-support"
+
+# The compiler used to build for this board. This has *nothing* to do
+# with what compiler is tested if we're testing gcc.
+set_board_info compiler "[find_gcc]"
+
+# I also supplied cflags and ldflags along the same lines as riscv-sim
+set_board_info cflags   "[libgloss_include_flags] [newlib_include_flags] \
+        -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
+        -I$env(DEJAGNU_BSP)/include \
+        -I$env(DEJAGNU_BSP)/drivers/ \
+        -I$env(DEJAGNU_BSP)/env \
+        -I$env(DEJAGNU_BSP)/env/coreplexip-e31-arty"
+set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
+        -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
+        $env(DEJAGNU_BSP)/env/coreplexip-e31-arty/start.o \
+        $env(DEJAGNU_BSP)/env/coreplexip-e31-arty/entry.o \
+        $env(DEJAGNU_BSP)/drivers/plic/plic_driver.o \
+        $env(DEJAGNU_BSP)/env/coreplexip-e31-arty/init.o \
+        -nostartfiles \
+        -nostdlib \
+        -Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=open -Wl,--wrap=lseek \
+        -Wl,--wrap=read -Wl,--wrap=write -Wl,--wrap=fstat -Wl,--wrap=stat \
+        -Wl,--wrap=close -Wl,--wrap=link -Wl,--wrap=unlink -Wl,--wrap=execve \
+        -Wl,--wrap=fork -Wl,--wrap=getpid -Wl,--wrap=kill -Wl,--wrap=wait \
+        -Wl,--wrap=isatty -Wl,--wrap=times -Wl,--wrap=sbrk -Wl,--wrap=_exit \
+        -Wl,--wrap=puts -Wl,--wrap=_malloc -Wl,--wrap=_free -Wl,--wrap=_open \
+        -Wl,--wrap=_lseek -Wl,--wrap=_read -Wl,--wrap=_write \
+        -Wl,--wrap=_fstat -Wl,--wrap=_stat -Wl,--wrap=_close -Wl,--wrap=_link \
+        -Wl,--wrap=_unlink -Wl,--wrap=_execve -Wl,--wrap=_fork \
+        -Wl,--wrap=_getpid -Wl,--wrap=_kill -Wl,--wrap=_wait \
+        -Wl,--wrap=_isatty -Wl,--wrap=_times -Wl,--wrap=_sbrk \
+        -Wl,--wrap=__exit -Wl,--wrap=_puts \
+        -L. -L$env(DEJAGNU_BSP)/env/coreplexip-e31-arty/ -L$env(DEJAGNU_BSP)/env \
+        -Wl,--start-group \
+        -lc  -lm -lstdc++ -lgcc -lwrap \
+        -Wl,--end-group"
+
+# This board doesn't use a linker script.
+set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/coreplexip-e31-arty/flash.lds"
+
+# The flavors of debug we support
+set DEBUG_TORTURE_OPTIONS {-gdwarf-2}
+
+# We don't need a status wrapper, we extract the result by looking at
+# registers when we have breakpointed _exit, exit and abort.
+set_board_info needs_status_wrapper 0
+
+proc riscv_env_var { varname defaultval } {
+    global env
+
+    if { [info exists env(${varname}) ] } {
+        return $env(${varname})
+    } else {
+        return ${defaultval}
+    }
+}
+
+# Configure specially for testing via GDB
+set_board_info gdb_run_command "continue"
+set_board_info gdb_protocol "remote"
+set_board_info gdb,start_symbol "_start"
+set_board_info gdb,remote_timeout [riscv_env_var RISCV_TIMEOUT 60]
+
+set riscv_xlen [riscv_env_var RISCV_XLEN 32]
+
+set_board_info use_gdb_stub 1
+
+set GDB "riscv${riscv_xlen}-unknown-elf-gdb"
+set GDBSERVER ":$env(RISCV_NETPORT)"
+# set OPENOCD_CFG "$env(DEJAGNU_BSP)/env/coreplexip-e31-arty/openocd-rtos.cfg"
+# set GDBSERVER "$env(DEJAGNU_OPENOCD) -f $OPENOCD_CFG -c 'gdb_port pipe' -l $env(DEJAGNU_OPENOCD_LOG)"
+
+# RISCV_TRACE contains a comma separated list of trace flags, martial them
+# into a tcl list in the board_info here.
+if { [info exists env(RISCV_TRACE) ] } {
+    set trace_flags [split $env(RISCV_TRACE) ,]
+    set_board_info target_trace "$trace_flags"
+}
+
+# GDB tool specific settings
+set gdb_test_timeout [riscv_env_var RISCV_GDB_TIMEOUT 60]
+
+set_board_info gdb,can_reverse 0
+set_board_info gdb,nofileio 1
+set_board_info gdb,noinferiorio 1
+set_board_info gdb,noresults 1
+set_board_info gdb,nosignals 1
+set_board_info gdb,use_precord 0
+set_board_info noargs 1
+set_board_info gdb,no_thread_names 1
+set_board_info gdb,no_self_modifying_code 1
+set_board_info gdb,do_reload_on_run 1
+set_board_info gdb,skip_gdbserver_tests 1
+set_board_info gdb,exit_is_unreliable 1
+
+set_board_info debug_flags "-g3"
+start_openocd
