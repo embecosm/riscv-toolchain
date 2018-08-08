@@ -40,52 +40,18 @@
 # Set the top level directory.
 topdir=$(cd $(dirname $0)/..;pwd)
 
-# Are we a developer?
-if [ \( $# = 1 \) -a \( "x$1" = "x-dev" \) ]
-then
-    BASE_URL=git@github.com:embecosm
-fi
-
-# Set the default base URL, if it is not already provided by the environment.
-if [ -z ${BASE_URL+x} ]
-then
-    BASE_URL=https://github.com/embecosm
-fi
-
-# Upstream repo names
-US=github
-EM=embecosm
-
 cd ${topdir}
 
 # get the most important ones first
-git clone -o ${EM} https://github.com/T-J-Teru/binutils-gdb.git binutils
-git clone -o ${EM} https://github.com/T-J-Teru/gcc.git gcc
-git clone --recursive -o ${EM} https://github.com/riscv/riscv-openocd.git openocd
+git clone https://github.com/T-J-Teru/binutils-gdb.git binutils
+ln -s binutils gdb
+git clone https://github.com/gcc-mirror/gcc gcc
+git clone --recursive https://github.com/riscv/riscv-openocd.git openocd
 
-git clone -o ${EM} https://github.com/embecosm/riscv-newlib.git newlib
+git clone https://github.com/embecosm/riscv-newlib.git newlib
 
 # now get those for testing/executing
-git clone -o ${EM} https://github.com/T-J-Teru/dejagnu.git dejagnu
-
-git clone -o ${EM} https://github.com/T-J-Teru/riscv-gdbserver.git gdbserver
-
-# git clone -o ${EM} ${BASE_URL}/picorv32.git picorv32
-# git clone -o ${EM} ${BASE_URL}/ri5cy.git ri5cy
-# git clone -o ${EM} ${BASE_URL}/riscv-pk.git riscv-pk
-# git clone -o ${EM} ${BASE_URL}/riscv-fesvr.git riscv-fesvr
-# git clone -o ${EM} ${BASE_URL}/riscv-isa-sim.git riscv-isa-sim
-
-# git clone -o ${EM} ${BASE_URL}/riscv-beebs.git beebs
-# git clone -o ${EM} ${BASE_URL}/riscv-tests.git riscv-tests
-
-# git clone -o ${EM} ${BASE_URL}/berkeley-softfloat-3 berkeley-softfloat-3
-# git clone -o ${EM} ${BASE_URL}/berkeley-testfloat-3 berkeley-testfloat-3
-
-# initialize the submodule for the test environment in riscv-tests
-# cd riscv-tests
-# git submodule update --init --recursive
-# cd ${topdir}
+git clone https://github.com/T-J-Teru/dejagnu.git dejagnu
 
 echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
 
