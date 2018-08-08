@@ -26,6 +26,7 @@ need to check or adjust hw wp lim:
 
 reason: run to exit
 
+	gdb.base/commands.exp
 	gdb.mi/mi-break.exp
 	gdb.mi/mi-nonstop-exit.exp
 	gdb.mi/mi-exit-code.exp
