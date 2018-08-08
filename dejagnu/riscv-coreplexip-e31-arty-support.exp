@@ -201,13 +201,13 @@ proc gdb_start { } {
     }
 
     # force the width to "unlimited", so no wraparound occurs
-    send_gdb "set remote hardware-watchpoint-limit 4\n"
+    send_gdb "set remote hardware-watchpoint-limit 2\n"
     gdb_expect 10 {
 	-re "$gdb_prompt $" {
-	    verbose "Setting hardware-watchpoint-limit to 4" 2
+	    verbose "Setting hardware-watchpoint-limit to 2" 2
 	}
 	timeout {
-	    warning "Couldn't set the hardware-watchpoint-limit to 4."
+	    warning "Couldn't set the hardware-watchpoint-limit to 2."
             return -1
 	}
     }
@@ -250,12 +250,12 @@ proc mi_gdb_target_cmd { protocol options } {
         }
     }
 
-    send_gdb "48-gdb-set remote hardware-watchpoint-limit 4\n"
+    send_gdb "48-gdb-set remote hardware-watchpoint-limit 2\n"
     gdb_expect 10 {
         -re "48\\^done.*$mi_gdb_prompt" {
         }
         timeout {
-            perror "Unable to set hardware-watchpoint-limit to 4."
+            perror "Unable to set hardware-watchpoint-limit to 2."
             return -1
         }
     }
@@ -296,12 +296,12 @@ proc mi_gdb_target_load { } {
         }
     }
 
-    send_gdb "48-gdb-set remote hardware-watchpoint-limit 4\n"
+    send_gdb "48-gdb-set remote hardware-watchpoint-limit 2\n"
     gdb_expect 10 {
         -re "48\\^done.*$mi_gdb_prompt" {
         }
         timeout {
-            perror "Unable to set hardware-watchpoint-limit to 4."
+            perror "Unable to set hardware-watchpoint-limit to 2."
             return -1
         }
     }
