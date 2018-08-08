@@ -140,3 +140,4 @@ set_board_info gdb,skip_gdbserver_tests 1
 set_board_info gdb,exit_is_unreliable 1
 
 set_board_info debug_flags "-g3"
+start_openocd

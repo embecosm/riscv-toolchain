@@ -33,7 +33,6 @@ proc gdb_reload_start_target { } {
 
     set targetname "remote"
 
-    start_openocd
     for {set i 1} {$i <= 3} {incr i} {
 	    send_gdb "target remote ${GDBSERVER}\n"
 	    gdb_expect 10 {
@@ -167,7 +166,8 @@ proc start_openocd { } {
 
 
     set timestamp [timestamp -format "%m-%d-%Y:%H:%M:%S"]
-    spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) -d --log_output openocd-$gdb_test_file_name.log
+    # spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) -d --log_output openocd-$gdb_test_file_name.log
+    spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) -d --log_output openocd-$timestamp.log
     set openocd_pid $spawn_id
 
     sleep 0.1
@@ -251,7 +251,6 @@ proc mi_gdb_target_cmd { protocol options } {
 	set loadtimeout 1600
     }
 
-    start_openocd
 
     send_gdb "47-target-select remote ${GDBSERVER}\n"
     gdb_expect 10 {
@@ -296,8 +295,6 @@ proc mi_gdb_target_load { } {
     } else {
     set loadtimeout 1600
     }
-
-    start_openocd
 
     send_gdb "47-target-select remote ${GDBSERVER}\n"
     gdb_expect 10 {
