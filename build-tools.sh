@@ -6,6 +6,7 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 # ====================================================================
 
 GDBSERVER_ONLY=no
+BUILD_OPENOCD=yes
 SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 DEBUG_BUILD=no
