@@ -42,11 +42,10 @@ fi
 
 topdir=$(cd $(dirname $0)/..;pwd)
 
-repos="binutils:apb-riscv-gdb                   \
+repos="binutils:master                          \
        gcc:master                               \
        newlib:riscv-newlib-2.5.0                \
        dejagnu:master                           \
-       gdbserver:master                         \
        openocd:riscv"
 
 for r in ${repos}
