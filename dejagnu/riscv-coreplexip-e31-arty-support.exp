@@ -167,7 +167,7 @@ proc start_openocd { } {
 
     set timestamp [timestamp -format "%m-%d-%Y:%H:%M:%S"]
     # spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) -d --log_output openocd-$gdb_test_file_name.log
-    spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) -d --log_output openocd-$timestamp.log
+    spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) --log_output openocd-$timestamp.log
     set openocd_pid $spawn_id
 
     sleep 0.1
