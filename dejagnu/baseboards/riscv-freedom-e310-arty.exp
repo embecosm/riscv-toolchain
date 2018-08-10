@@ -83,7 +83,6 @@ set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -lc  -lm -lstdc++ -lgcc -lwrap \
         -Wl,--end-group"
 
-# This board doesn't use a linker script.
 set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/freedom-e300-arty/flash.lds"
 
 # The flavors of debug we support

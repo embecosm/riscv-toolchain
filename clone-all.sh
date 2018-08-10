@@ -26,16 +26,7 @@
 
 # Invocation Syntax
 
-#     clone-all.sh [-dev]
-
-# Argument meanings:
-
-#     -dev  Clone Embecosm repos as SSH, rather than HTTPS, allowing write
-#           access.
-
-# If the BASE_URL environment variable is set, then that is used as the base of
-# all repository URLs, to allow cloning from non-github sources (e.g. local
-# mirrors).
+#     clone-all.sh
 
 # Set the top level directory.
 topdir=$(cd $(dirname $0)/..;pwd)
@@ -52,6 +43,3 @@ git clone https://github.com/embecosm/riscv-newlib.git newlib
 
 # now get those for testing/executing
 git clone https://github.com/T-J-Teru/dejagnu.git dejagnu
-
-echo -e "\nNote: To build everything, you will need device-tree-compiler and verilator installed.\n"
-

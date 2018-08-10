@@ -185,14 +185,6 @@ case "${TARGET_BOARD}" in
     export DEJAGNU_OPENOCD=${INSTALL_DIR}/bin/openocd
     export DEJAGNU_OPENOCD_CFG=${TOOLCHAIN_DIR}/bsp/env/${BOARD_NAME}/openocd.cfg
     export DEJAGNU_OPENOCD_LOG=${RESULTS_DIR}/openocd.log
-
-    # one OpenOCD session for the whole test
-    # echo ${INSTALL_DIR}/bin/openocd \
-    #     -f ${TOOLCHAIN_DIR}/bsp/env/${BOARD_NAME}/openocd.cfg
-    # ${INSTALL_DIR}/bin/openocd \
-    #     -f ${TOOLCHAIN_DIR}/bsp/env/${BOARD_NAME}/openocd.cfg & pid=$!
-    # echo "Started GDB server on port ${RISCV_NETPORT} (process ${pid})"
-    # GDBSERVER_PID=$pid
         ;;
 esac
 

@@ -23,15 +23,12 @@ rename gdb_start {}
 rename mi_gdb_target_cmd {}
 rename mi_gdb_target_load {}
 rename mi_gdb_load {}
-# rename mi_expect_stop mi_expect_stop_orig
 rename mi_gdb_start mi_gdb_start_orig
 rename skip_gdbserver_tests {}
 
 proc gdb_reload_start_target { } {
     global gdb_prompt
     global GDBSERVER
-
-    # killall_openocd
 
     set targetname "remote"
     send_gdb "target remote | ${GDBSERVER}\n"
@@ -47,11 +44,6 @@ proc gdb_reload_start_target { } {
             verbose "Set target to $targetname"
             return 0
         }
-        # -re "Remote debugging using.*\nOpen On-Chip Debugger.*\nLicensed.*\n.*bugs.html.*\nRemote communication error.*Target disconnected.*Connection reset by peer.*\n$gdb_prompt $" {
-        #     warning "Couldn't connect to target. Killing any running openocd processes already running."
-        #     killall_openocd
-        #     return 2
-        # }
         -re "Remote debugging using.*$gdb_prompt $" {
             verbose "Set target to $targetname (via openocd)"
             return 0
@@ -87,23 +79,6 @@ proc gdb_reload_start_target { } {
     return 1
 }
 
-# proc monitor_resume { } {
-#     global gdb_prompt
-
-#     send_gdb "monitor resume\n"
-#     gdb_expect 10 {
-#         -re "halted at.*$gdb_prompt" {
-#             verbose "Resuming" 2
-#         }
-#         timeout {
-#             warning "Couldn't resume."
-#             return -1
-#         }
-#     }
-
-#     return 0
-# }
-
 proc monitor_reset_halt { } {
     global gdb_prompt
 
@@ -137,26 +112,6 @@ proc monitor_flash_protect_off { } {
 
     return 0
 }
-
-# proc start_openocd { } {
-#     global env
-#     global OPENOCD_PID
-    
-#     if [info exists OPENOCD_PID] {
-#         if [catch {close -i $OPENOCD_PID}] {
-#             warning "openocd_close: failed to close $OPENOCD_PID"
-#         }
-
-#         if [catch {wait -i $OPENOCD_PID}] {
-#             warning "openocd_close: failed to wait for $OPENOCD_PID"
-#         }
-#     }
-
-#     set OPENOCD_PID [spawn $env(DEJAGNU_OPENOCD) -f $env(DEJAGNU_OPENOCD_CFG) \
-#                                                  -l $env(DEJAGNU_OPENOCD_LOG)]
-#     warning "openocd spawned?"
-#     warning $OPENOCD_PID
-# }
 
 proc killall_openocd { } {
     set runcmd [list exec killall -q openocd]
@@ -235,15 +190,10 @@ proc mi_gdb_target_cmd { protocol options } {
 	set loadtimeout 1600
     }
 
-    # killall_openocd
-
     send_gdb "47-target-select remote | ${GDBSERVER}\n"
     gdb_expect 60 {
         -re "47\\^connected.*$mi_gdb_prompt" {
         }
-        # -re "47\\^.*Remote communication error.*Target disconnected.*Connection reset by peer.\"" {
-        #     warning "COMS ERROR - KILL OPENOCD HERE AND TRY AGAIN 1"
-        # }
         timeout {
             perror "Unable to connect to remote target (timeout)"
             return -1
@@ -263,10 +213,6 @@ proc mi_gdb_target_cmd { protocol options } {
     return 0
 }
 
-#catch this, kill openocd and try again
-# 47^error,msg="Remote communication error.  Target disconnected.: Connectio
-# n reset by peer."
-
 #
 # connect to the target and download a file, if necessary.
 # return a -1 if anything goes wrong.
@@ -281,15 +227,10 @@ proc mi_gdb_target_load { } {
     set loadtimeout 1600
     }
 
-    # killall_openocd
-
     send_gdb "47-target-select remote | ${GDBSERVER}\n"
     gdb_expect 60 {
         -re "47\\^connected.*$mi_gdb_prompt" {
         }
-        # -re "47\\^.*Remote communication error.*Target disconnected.*Connection reset by peer.\"" {
-        #     warning "COMS ERROR - KILL OPENOCD HERE AND TRY AGAIN 2"
-        # }
         timeout {
             perror "Unable to connect to remote target (timeout)"
             return -1
@@ -338,17 +279,6 @@ proc mi_gdb_target_load { } {
         }
     }
     
-    # send_gdb "1002-interpreter-exec console \"monitor resume\"\n"
-    # gdb_expect 10 {
-    #     -re "1002\\^done.*$mi_gdb_prompt" {
-    #         verbose "Resuming" 2
-    #     }
-    #     timeout {
-    #         warning "Couldn't resume."
-    #         return -1
-    #     }
-    # }
-
     return 0
 }
 
@@ -360,15 +290,6 @@ proc mi_gdb_load { arg } {
 
     mi_gdb_target_load
 }
-
-# proc mi_expect_stop { reason func args file line extra test } {
-#     if { $reason == "exited-normally" } {
-#         unsupported "$test (exit_is_unreliable)"
-#         return
-#     }
-
-#     return mi_expect_stop_orig reason func args file line extra test
-# }
 
 proc skip_gdbserver_tests { } {
     return 1
