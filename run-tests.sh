@@ -184,7 +184,7 @@ case "${TARGET_BOARD}" in
     BOARD_NAME=${TARGET_BOARD/riscv-/}
     export DEJAGNU_OPENOCD=${INSTALL_DIR}/bin/openocd
     export DEJAGNU_OPENOCD_CFG=${TOOLCHAIN_DIR}/bsp/env/${BOARD_NAME}/openocd.cfg
-    export DEJAGNU_OPENOCD_LOG=${RESULTS_DIR}/openocd.log
+    export DEJAGNU_RESULTS_DIR=${RESULTS_DIR}
         ;;
 esac
 
