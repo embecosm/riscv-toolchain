@@ -1,4 +1,4 @@
-# Board specification for the RISC-V GDB server
+# Board specification for the SiFive Freedom E310 Arty FPGA
 
 # Copyright (C) 2018 Embecosm Limited.
 

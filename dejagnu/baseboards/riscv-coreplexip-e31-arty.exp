@@ -1,4 +1,4 @@
-# Board specification for the RISC-V Freedom E310 Arty FPGA
+# Board specification for the SiFive Coreplex E31 Arty FPGA
 
 # Copyright (C) 2018 Embecosm Limited.
 
@@ -51,7 +51,6 @@ load_board_description "riscv-coreplexip-e31-arty-support"
 # with what compiler is tested if we're testing gcc.
 set_board_info compiler "[find_gcc]"
 
-# I also supplied cflags and ldflags along the same lines as riscv-sim
 set_board_info cflags   "[libgloss_include_flags] [newlib_include_flags] \
         -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
         -I$env(DEJAGNU_BSP)/include \
@@ -83,7 +82,6 @@ set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -lc  -lm -lstdc++ -lgcc -lwrap \
         -Wl,--end-group"
 
-# This board doesn't use a linker script.
 set_board_info ldscript "-T$env(DEJAGNU_BSP)/env/coreplexip-e31-arty/flash.lds"
 
 # The flavors of debug we support
