@@ -80,7 +80,7 @@ proc gdb_reload_start_target { } {
         }
         timeout {
             send_gdb ""
-            break
+            return 1
         }
     }
 
