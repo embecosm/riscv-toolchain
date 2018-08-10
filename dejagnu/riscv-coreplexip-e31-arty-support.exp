@@ -202,6 +202,8 @@ proc gdb_reload { } {
 proc gdb_start { } {
     global gdb_prompt
 
+    start_openocd
+
     if [default_gdb_start] {
         return -1
     }
@@ -234,6 +236,8 @@ proc gdb_start { } {
 }
 
 proc mi_gdb_start { args } {
+    start_openocd
+
     if [mi_gdb_start_orig args] {
         return -1
     }
