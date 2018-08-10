@@ -102,6 +102,7 @@ gdb.base/duplicate-bp.exp - gdb.cp/m-static.exp
 
 reason: run to exit
 
+gdb.base/commands.exp
 gdb.mi/mi-break.exp
 gdb.mi/mi-nonstop-exit.exp
 gdb.mi/mi-exit-code.exp
