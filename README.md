@@ -12,7 +12,7 @@ Supported boards
 ----------------
 
 SiFive Freedom E310 Arty FPGA image
-SiFive Dual Core E31 Arty FPGA image
+SiFive Dual Core Coreplex E31 Arty FPGA image
 
 Getting the sources
 -------------------
@@ -55,4 +55,21 @@ These include options for setting the architecture and ABI.
 Executing the GDB tests
 -----------------------
 
+To run the full testsuite for the Freedom E310 Arty
 
+```
+./run-tests.sh --tool gdb \
+	--with-board riscv-freedom-e310-arty \
+	--install-dir <dir> \
+	--build-dir <dir>
+```
+
+To run a subset of the tests (e.g. all-bin.exp only):
+
+```
+./run-tests.sh --tool gdb \
+	--test-subset all-bin.exp
+	--with-board riscv-freedom-e310-arty \
+	--install-dir <dir> \
+	--build-dir <dir>
+```

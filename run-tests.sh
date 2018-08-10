@@ -79,9 +79,9 @@ case ${opt} in
         echo ""
         echo "The default --with-target is 'riscv32-unknown-elf'."
         echo ""
-        echo "The default for --with-board is 'riscv-sim', other"
-        echo "options are 'riscv-picorv32', 'riscv-ri5cy' or"
-        echo "'riscv-freedom-e310-arty'."
+        echo "The default for --with-board is 'riscv-freedom-e310-arty'"
+        echo "other options are 'riscv-coreplexip-e31-arty' and"
+        echo "'riscv-coreplexip-e31-arty-rtos'."
         echo ""
         exit 1
         ;;
