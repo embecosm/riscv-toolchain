@@ -47,6 +47,7 @@ gdb.mi/mi-dprintf.exp
 gdb.mi/mi-frame-regs.exp
 gdb.mi/mi-var-display.exp
 gdb.opt/inline-cmds.exp
+gdb.opt/inline-break.exp
 gdb.python/py-frame.exp
 gdb.python/py-framefilter.exp
 gdb.python/py-frame-inline.exp

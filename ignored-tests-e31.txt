@@ -12,6 +12,7 @@ reason: too many breakpoints
 	gdb.base/funcargs.exp
 	gdb.base/macscp.exp
 	gdb.base/sepdebug.exp
+	gdb.opt/inline-break.exp
 
 kept (small number of fails, useful test):
 
