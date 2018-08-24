@@ -54,13 +54,11 @@ set_board_info compiler "[find_gcc]"
 set_board_info cflags   "[libgloss_include_flags] [newlib_include_flags] \
         -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
         -I$env(DEJAGNU_BSP)/include \
-        -I$env(DEJAGNU_BSP)/drivers/ \
-        -I$env(DEJAGNU_BSP)/env \
-        -I$env(DEJAGNU_BSP)/env/coreplexip-e31-arty"
+        -I$env(DEJAGNU_BSP)/env"
 set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -fno-builtin-printf -march=rv32imac -mabi=ilp32 \
-        $env(DEJAGNU_BSP)/env/coreplexip-e31-arty/start.o \
-        $env(DEJAGNU_BSP)/env/coreplexip-e31-arty/entry.o \
+        $env(DEJAGNU_BSP)/env/start.S \
+        $env(DEJAGNU_BSP)/env/entry.S \
         $env(DEJAGNU_BSP)/drivers/plic/plic_driver.o \
         $env(DEJAGNU_BSP)/env/coreplexip-e31-arty/init.o \
         -nostartfiles \

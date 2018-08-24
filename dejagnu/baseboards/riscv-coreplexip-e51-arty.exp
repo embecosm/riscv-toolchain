@@ -59,8 +59,8 @@ set_board_info cflags   "[libgloss_include_flags] [newlib_include_flags] \
         -I$env(DEJAGNU_BSP)/env/coreplexip-e51-arty"
 set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] \
         -fno-builtin-printf -march=rv64imac -mabi=lp64 \
-        $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/start.o \
-        $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/entry.o \
+        $env(DEJAGNU_BSP)/env/start.S \
+        $env(DEJAGNU_BSP)/env/entry.S \
         $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/plic_driver.o \
         $env(DEJAGNU_BSP)/env/coreplexip-e51-arty/init.o \
         -nostartfiles \
