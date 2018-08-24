@@ -20,6 +20,8 @@ _start:
 
 #if defined(ENABLE_SMP)
 	smp_pause(t0, t1)
+#elif defined(smp_disable)
+	smp_disable(t0, t1)
 #endif
 
 	/* Load data section */
