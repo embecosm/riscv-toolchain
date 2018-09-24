@@ -409,7 +409,7 @@ if ! run_command ${TOP}/binutils/configure \
          --disable-documentation \
          --with-xmlto=no \
          --with-fop=no \
-         --disable-multilib \
+         --enable-multilib \
          --target=${TARGET_TRIPLET} \
          --with-sysroot=${SYSROOT_DIR} \
          --enable-poison-system-directories \
@@ -459,7 +459,7 @@ if ! run_command ${TOP}/gdb/configure \
          --disable-documentation \
          --with-xmlto=no \
          --with-fop=no \
-         --disable-multilib \
+         --enable-multilib \
          --target=${TARGET_TRIPLET} \
          --with-sysroot=${SYSROOT_DIR} \
          --enable-poison-system-directories \
@@ -517,7 +517,7 @@ then
                --disable-__cxa_atexit \
                --with-gnu-ld \
                --disable-libssp \
-               --disable-multilib \
+               --enable-multilib \
                --enable-target-optspace \
                --disable-libsanitizer \
                --disable-tls \
@@ -572,6 +572,7 @@ export PATH=${INSTALL_PREFIX_DIR}/bin:$PATH
 mkdir_and_enter "${NEWLIB_BUILD_DIR}"
 
 if ! run_command ${TOP}/newlib/configure \
+	 CFLAGS_FOR_TARGET='-g -O2 -mcmodel=medany'\
          --prefix=${INSTALL_PREFIX_DIR} \
          --sysconfdir=${INSTALL_SYSCONF_DIR} \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
@@ -624,7 +625,7 @@ if ! run_command ${TOP}/gcc/configure \
            --disable-__cxa_atexit \
            --with-gnu-ld \
            --disable-libssp \
-           --disable-multilib \
+           --enable-multilib \
            --enable-target-optspace \
            --disable-libsanitizer \
            --disable-tls \
