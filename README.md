@@ -13,6 +13,7 @@ Supported boards
 
 * SiFive Freedom E310 Arty FPGA image
 * SiFive Dual Core Coreplex E31 Arty FPGA image
+* SiFive Dual Core Coreplex E51 Arty FPGA image
 
 Getting the sources
 -------------------
