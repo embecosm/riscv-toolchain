@@ -49,6 +49,12 @@ To build a 32-bit riscv32imac tool chain (binutils, gdb, gcc, newlib, etc.):
 ./build-tools.sh --with-arch=rv32imac
 ```
 
+To build 64-bit riscv64imac tool chain :
+
+```
+./build-tools.sh --with-xlen 64 --with-target riscv64-unknown-elf --with-arch imac
+```
+
 To see the options for `build-tools.sh`, use `./build-tools.sh --help`.
 These include options for setting the architecture and ABI.
 
