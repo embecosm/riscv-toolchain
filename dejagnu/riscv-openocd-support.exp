@@ -148,15 +148,6 @@ proc start_openocd { } {
     sleep 0.1
 }
 
-proc killall_openocd { } {
-    set runcmd [list exec killall -q openocd]
-    set status [catch {exec $runcmd} result]
-    if {$status < 0 || $status > 1} {
-        error "Failed to run command $runcmd: $res"
-    }
-    warning "Killing all running openocd processes"
-}
-
 proc gdb_reload { } {
     global gdb_prompt
 

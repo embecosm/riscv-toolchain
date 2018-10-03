@@ -45,7 +45,7 @@ search_and_load_file "generic interface file" "gdbserver.exp" "${srcdir}/config"
 
 # Load some additional helper configuration files.
 load_board_description "gdbserver-base"
-load_board_description "riscv-coreplexip-e51-arty-support"
+load_board_description "riscv-openocd-support"
 
 # The compiler used to build for this board. This has *nothing* to do
 # with what compiler is tested if we're testing gcc.
