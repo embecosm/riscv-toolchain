@@ -27,8 +27,11 @@ rename skip_gdbserver_tests {}
 proc gdb_reload_start_target { } {
     global gdb_prompt
     global GDBSERVER
+    global timeout
 
     set targetname "remote"
+    # reset global timeout to 10 (as mi_gdb_target_cmd changes it to 20)
+    set timeout 10
 
     for {set i 1} {$i <= 3} {incr i} {
 	    send_gdb "target remote ${GDBSERVER}\n"
@@ -199,6 +202,11 @@ proc mi_gdb_start { args } {
 proc mi_gdb_target_cmd { protocol options } {
     global mi_gdb_prompt
     global GDBSERVER
+    global timeout
+
+    # the default global timeout of 10 secs may be too short for some mi tests
+    # e.g. gdb.mi/gdb2549.exp takes a while to print a long list of registers
+    set timeout 20
 
     if [target_info exists gdb_load_timeout] {
 	set loadtimeout [target_info gdb_load_timeout]
