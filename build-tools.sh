@@ -11,7 +11,7 @@ SKIP_GCC_STAGE_1=no
 CLEAN_BUILD=no
 DEBUG_BUILD=no
 BUILD_DIR=${TOP}/build
-VERILATOR_DIR=`pkg-config --variable=prefix verilator`
+# VERILATOR_DIR=`pkg-config --variable=prefix verilator`
 INSTALL_DIR=${TOP}/install
 
 # ====================================================================
