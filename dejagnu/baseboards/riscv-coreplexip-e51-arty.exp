@@ -107,6 +107,7 @@ set_board_info gdb_run_command "continue"
 set_board_info gdb_protocol "remote"
 set_board_info gdb,start_symbol "_start"
 set_board_info gdb,remote_timeout [riscv_env_var RISCV_TIMEOUT 60]
+set_board_info gdb,uses_flash 0
 
 set riscv_xlen [riscv_env_var RISCV_XLEN 64]
 

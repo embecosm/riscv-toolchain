@@ -109,6 +109,22 @@ proc monitor_reset_halt { } {
     return 0
 }
 
+proc monitor_flash_protect_off { } {
+    global gdb_prompt
+
+    send_gdb "monitor flash protect 0 64 last off\n"
+    gdb_expect 10 {
+        -re "cleared protection for sectors 64 through 255 on flash bank 0.*$gdb_prompt" {
+            verbose "Clearing flash protection" 2
+        }
+        timeout {
+            return -1
+        }
+    }
+
+    return 0
+}
+
 proc start_openocd { } {
     global env
     global openocd_pid
@@ -148,6 +164,9 @@ proc gdb_reload { } {
         return 1
     }
     monitor_reset_halt
+    if {[target_info exists gdb,uses_flash] && [target_info gdb,uses_flash]} {
+        monitor_flash_protect_off
+    }
     gdb_load_cmd
 }
 
@@ -247,6 +266,19 @@ proc mi_gdb_target_cmd { protocol options } {
         }
         timeout {
             return -1
+        }
+    }
+
+    if [target_info gdb,uses_flash] {
+        send_gdb "1001-interpreter-exec console \"monitor flash protect 0 64 last off\"\n"
+        gdb_expect 10 {
+            -re "1001\\^done.*$mi_gdb_prompt" {
+                verbose "Clearing flash protection" 2
+            }
+            timeout {
+                warning "Couldn't clear flash protection."
+                return -1
+            }
         }
     }
 
