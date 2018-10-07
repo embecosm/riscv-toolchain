@@ -171,26 +171,30 @@ proc gdb_start { } {
     }
 
     # this board only has 2 hardware breakpoints
-    send_gdb "set remote hardware-breakpoint-limit 4\n"
-    gdb_expect 10 {
-    -re "$gdb_prompt $" {
-        verbose "Setting hardware-breakpoint-limit to 4" 2
-    }
-    timeout {
-        warning "Couldn't set the hardware-breakpoint-limit to 4."
-            return -1
+    if [target_info exists gdb,hw_bp_limit] {
+        send_gdb "set remote hardware-breakpoint-limit [target_info gdb,hw_bp_limit]\n"
+        gdb_expect 10 {
+        -re "$gdb_prompt $" {
+            verbose "Setting hardware-breakpoint-limit to [target_info gdb,hw_bp_limit]" 2
+        }
+        timeout {
+            warning "Couldn't set the hardware-breakpoint-limit."
+                return -1
+            }
         }
     }
 
-    send_gdb "set remote hardware-watchpoint-limit 2\n"
-    gdb_expect 10 {
-	-re "$gdb_prompt $" {
-	    verbose "Setting hardware-watchpoint-limit to 2" 2
-	}
-	timeout {
-	    warning "Couldn't set the hardware-watchpoint-limit to 2."
-            return -1
-	}
+    if [target_info exists gdb,hw_wp_limit] {
+        send_gdb "set remote hardware-watchpoint-limit [target_info gdb,hw_wp_limit]\n"
+        gdb_expect 10 {
+        -re "$gdb_prompt $" {
+            verbose "Setting hardware-watchpoint-limit to [target_info gdb,hw_wp_limit]" 2
+        }
+        timeout {
+            warning "Couldn't set the hardware-watchpoint-limit."
+                return -1
+            }
+        }
     }
 
     return 0
@@ -240,13 +244,15 @@ proc mi_gdb_target_cmd { protocol options } {
         }
     }
 
-    send_gdb "48-gdb-set remote hardware-watchpoint-limit 2\n"
-    gdb_expect 10 {
-        -re "48\\^done.*$mi_gdb_prompt" {
-        }
-        timeout {
-            perror "Unable to set hardware-watchpoint-limit to 2."
-            return -1
+    if [target_info exists gdb,hw_wp_limit] {
+        send_gdb "48-gdb-set remote hardware-watchpoint-limit [target_info gdb,hw_wp_limit]\n"
+        gdb_expect 10 {
+            -re "48\\^done.*$mi_gdb_prompt" {
+            }
+            timeout {
+                perror "Unable to set hardware-watchpoint-limit."
+                return -1
+            }
         }
     }
 
