@@ -1,7 +1,6 @@
 # RISCV specific site.exp
 
-# Copyright (C) 2017 Embecosm Limited.
-# Contributor Ian Bolton <ian.bolton@embecosm.com>
+# Copyright (C) 2017-2018 Embecosm Limited.
 
 # This file is part of the Embecosm RISC-V Toolchain build system.
 
