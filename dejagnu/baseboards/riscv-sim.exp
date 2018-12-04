@@ -53,5 +53,6 @@ set_board_info gdb,use_precord 0
 
 # Setup the timeout
 set_board_info gcc,timeout 600
+set_board_info gdb,timeout 30
 
 load_board_description "riscv-dwarf-unwinders"
