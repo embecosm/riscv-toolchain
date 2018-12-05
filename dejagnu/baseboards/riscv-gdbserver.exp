@@ -86,7 +86,6 @@ set riscv_xlen [riscv_env_var RISCV_XLEN 32]
 
 set_board_info use_gdb_stub 1
 
-set GDB "riscv${riscv_xlen}-unknown-elf-gdb"
 set GDBSERVER "riscv${riscv_xlen}-gdbserver --stdin --core ${riscv_corename}"
 
 # RISCV_TRACE contains a comma separated list of trace flags, martial them
