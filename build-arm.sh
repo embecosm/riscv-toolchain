@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Build the ARM embedded tool chain from the same source as the RISC-V
+
 TOOLCHAIN_DIR=$(cd "`dirname \"$0\"`"; pwd)
 TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
@@ -7,9 +9,8 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 CLEAN_BUILD=no
 DEBUG_BUILD=no
-STACK_ERASE=no
-BUILD_DIR=${TOP}/build
-INSTALL_DIR=${TOP}/install
+BUILD_DIR=${TOP}/build-arm
+INSTALL_DIR=${TOP}/install-arm
 
 # ====================================================================
 
@@ -45,37 +46,34 @@ function usage () {
     echo "        Choose between 32 or 64.  Default is 32."
     echo ""
     echo "--with-target:"
-    echo "        Defaults are riscv32-unknown-elf or riscv64-unknown-elf"
-    echo "        depending on the value of --with-xlen."
+    echo "        Defaults are arm-none-eabi or aarch64-none-elf"
+    echo "        depending on the value of --with-xlen. Possibly"
+    echo "        armv8l-none-eabi might work as well."
     echo ""
-    echo "--with-arch:"
-    echo "        Defaults are rv32im or rv64im dependind on the value"
-    echo "        of --with-xlen.  Add the 'c' flag for compressed, 'f'"
-    echo "        for single precision floating point, and 'd' for double"
-    echo "        precision floating point support.  When specifiying, don't"
-    echo "        include the 'rv32' or 'rv64' prefix, this will be added"
-    echo "        automatically based on the value passed in --with-xlen."
+    echo "--with-cpu:"
+    echo "        Defaults are cortex-m4 or cortex-a53  depending on the value"
+    echo "        of --with-xlen."
     echo ""
-    echo "--with-abi:"
-    echo "        Only pass this if you need to override the default that"
-    echo "        this script selects for you.  The selected ABI will be"
-    echo "        ilp32 or lp64 for 32 or 64 xlen respectively.  The ABI"
-    echo "        will be extended with the 'd' or 'f' modifier if 'd' or"
-    echo "        'f' is included in the --with-arch value.  The 'd' is"
-    echo "        preferred over 'f' if both are present in the arch value"
+    echo "--with-fpu:"
+    echo "        Can only be used with --with-xlen is 32, when it defaults."
+    echo "        to fpv4-sp-d16"
     echo ""
-    echo "--enable-default-stack-erase:"
-    echo "        Pass this if you'd like to build GCC and newlib such that"
-    echo "        stack erase is turned on by default, and crt0 verifies that"
-    echo "        the stack has been erased after main returns."
+    echo "--with-float:"
+    echo "        Defaults to hard if --with-fpu is specified or if the value"
+    echo "        of --with-xlen is 64 and soft otherwise."
+    echo ""
+    echo "--with-mode:"
+    echo "        Defaults to thumb"
 
     exit 1
 }
 
 XLEN_SPECIFIED=no
-ARCH_SPECIFIED=no
-ABI_SPECIFIED=no
 TARGET_SPECIFIED=no
+CPU_SPECIFIED=no
+FPU_SPECIFIED=no
+FLOAT_SPECIFIED=no
+MODE_SPECIFIED=no
 
 # Parse options
 until
@@ -126,22 +124,29 @@ case ${opt} in
         TARGET_SPECIFIED=yes
 	;;
 
-    --with-arch)
+    --with-cpu)
 	shift
-	WITH_ARCH=$1
-        ARCH_SPECIFIED=yes
+	WITH_CPU=$1
+        CPU_SPECIFIED=yes
 	;;
 
-    --with-abi)
+    --with-fpu)
 	shift
-	WITH_ABI=$1
-        ABI_SPECIFIED=yes
+	WITH_FPU=$1
+        FPU_SPECIFIED=yes
 	;;
 
-    --enable-default-stack-erase)
-        shift
-        STACK_ERASE=yes
-        ;;
+    --with-float)
+	shift
+	WITH_FLOAT=$1
+        FLOAT_SPECIFIED=yes
+	;;
+
+    --with-mode)
+	shift
+	WITH_MODE=$1
+        MODE_SPECIFIED=yes
+	;;
 
     ?*)
 	usage "Unknown argument $1"
@@ -165,63 +170,78 @@ then
     WITH_XLEN=32
 fi
 
-if [ "${ARCH_SPECIFIED}" == "no" ]
-then
-    WITH_ARCH=im
-else
-    case ${WITH_ARCH} in
-        rv32* | rv64*)
-            echo "Don't include 'rv32' or 'rv64' prefix in --with-arch value ${WITH_ARCH}"
-            exit 1
-            ;;
-    esac
-fi
-
-if [ "${ABI_SPECIFIED}" == "no" ]
-then
-    # The base ABI, matching 32 or 64 bit.
-    if [ "${WITH_XLEN}" == "32" ]
-    then
-        WITH_ABI="ilp32"
-    else
-        WITH_ABI="lp64"
-    fi
-
-    # Now, any floating point extensions to the ABI.
-    case ${WITH_ARCH} in
-        *d*)
-            WITH_ABI="${WITH_ABI}d"
-            ;;
-        *f*)
-            WITH_ABI="${WITH_ABI}f"
-            ;;
-    esac
-fi
-
 if [ "${TARGET_SPECIFIED}" == "no" ]
 then
-    TARGET_TRIPLET=riscv${WITH_XLEN}-unknown-elf
+    case ${WITH_XLEN} in
+	32)
+	    TARGET_TRIPLET=arm-none-eabi
+	    ;;
+	64)
+	    TARGET_TRIPLET=aarch64-none-elf
+	    ;;
+    esac
 fi
 
-WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
-
-if [ "${STACK_ERASE}" == "yes" ]
+if [ "${CPU_SPECIFIED}" = "no" ]
 then
-    GCC_STACK_ERASE=--enable-default-stack-erase
-    NEWLIB_STACK_ERASE=--enable-stack-erase
+    case ${WITH_XLEN} in
+	32)
+	    WITH_CPU=cortex-m4
+	    ;;
+	64)
+	    WITH_CPU=cortex-a53
+	    ;;
+    esac
+fi
+
+if [ "${WITH_XLEN}" = "32" ]
+then
+    if [ "${FPU_SPECIFIED}" = "no" ]
+    then
+	WITH_FPU="fpv4-sp-d16"
+    fi
+    WITH_FPU_STRING="--with-fpu=${WITH_FPU}"
 else
-    GCC_STACK_ERASE=""
-    NEWLIB_STACK_ERASE=""
+    if [ "${FPU_SPECIFIED}" = "yes" ]
+    then
+	echo "Warning: --with-cpu ignored for AArch 64"
+	WITH_FPU=""
+	WITH_FPU_STRING=""
+    fi
+fi
+
+if [ "${FLOAT_SPECIFIED}" = "no" ]
+then
+    case ${WITH_XLEN} in
+	32)
+	    if [ ${FPU_SPECIFIED} ]
+	    then
+		WITH_FLOAT="hard"
+	    else
+		WITH_FLOAT="soft"
+	    fi
+	    ;;
+	64)
+	    WITH_FLOAT="hard"
+	    ;;
+    esac
+fi
+
+if [ "${MODE_SPECIFIED}" = "no" ]
+then
+    WITH_MODE="thumb"
 fi
 
 # ====================================================================
 
 echo "               Top: ${TOP}"
 echo "         Toolchain: ${TOOLCHAIN_DIR}"
-echo "            Target: ${TARGET_TRIPLET}"
 echo "              Xlen: ${WITH_XLEN}"
-echo "              Arch: ${WITH_ARCH}"
-echo "               ABI: ${WITH_ABI}"
+echo "            Target: ${TARGET_TRIPLET}"
+echo "               CPU: ${WITH_CPU}"
+echo "               FPU: ${WITH_FPU}"
+echo "             FLOAT: ${WITH_FLOAT}"
+echo "              MODE: ${WITH_MODE}"
 echo "       Debug build: ${DEBUG_BUILD}"
 echo "         Build Dir: ${BUILD_DIR}"
 echo "       Install Dir: ${INSTALL_DIR}"
@@ -380,15 +400,16 @@ if ! run_command ${TOP}/gcc/configure \
            --without-isl \
            --without-cloog \
            --disable-decimal-float \
-           --with-arch=${WITH_ARCH} \
-           --with-abi=${WITH_ABI} \
+           --with-cpu=${WITH_CPU} \
+           ${WITH_FPU_STRING} \
+           --with-float=${WITH_FLOAT} \
+           --with-mode=${WITH_MODE} \
            --enable-languages=c \
            --without-headers \
            --with-newlib \
            --disable-largefile \
            --disable-nls \
-           --enable-checking=yes \
-           ${GCC_STACK_ERASE}
+           --enable-checking=yes
 then
     error "Failed to configure GCC (stage 1)"
 fi
@@ -422,7 +443,6 @@ if ! run_command ${TOP}/newlib/configure \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
          --target=${TARGET_TRIPLET} \
          --with-sysroot=${SYSROOT_DIR} \
-	 CFLAGS_FOR_TARGET="-DPREFER_SIZE_OVER_SPEED=1 -Os" \
 	--disable-newlib-fvwrite-in-streamio \
 	--disable-newlib-fseek-optimization \
 	--enable-newlib-nano-malloc \
@@ -432,7 +452,7 @@ if ! run_command ${TOP}/newlib/configure \
 	--disable-newlib-wide-orient \
 	--disable-newlib-io-float \
 	--enable-newlib-nano-formatted-io \
-         ${NEWLIB_STACK_ERASE}
+	 CFLAGS_FOR_TARGET="-DPREFER_SIZE_OVER_SPEED=1 -Os"
 then
     error "Failed to configure newlib"
 fi
@@ -486,15 +506,16 @@ if ! run_command ${TOP}/gcc/configure \
            --without-isl \
            --without-cloog \
            --disable-decimal-float \
-           --with-arch=${WITH_ARCH} \
-           --with-abi=${WITH_ABI} \
+           --with-cpu=${WITH_CPU} \
+           ${WITH_FPU_STRING} \
+           --with-float=${WITH_FLOAT} \
+           --with-mode=${WITH_MODE} \
            --enable-languages=c,c++ \
            --with-newlib \
            --disable-largefile \
            --disable-nls \
            --enable-checking=yes \
-           --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin \
-           ${GCC_STACK_ERASE}
+           --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin
 then
     error "Failed to configure GCC (stage 2)"
 fi
@@ -511,51 +532,6 @@ fi
 
 job_done
 
-
-# ====================================================================
-#                Build and Install RISC-V Emulator (QEMU)
-# ====================================================================
-
-job_start "Building QEMU"
-
-mkdir_and_enter ${QEMU_BUILD_DIR}
-
-if ! run_command ${TOP}/qemu/configure \
-           --prefix=${INSTALL_DIR} \
-           --target-list=riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user
-then
-    error "Failed to configure QEMU"
-fi
-
-if ! run_command make
-then
-    error "Failed to build QEMU"
-fi
-
-if ! run_command make install
-then
-    error "Failed to install QEMU"
-fi
-
-job_done
-
-# ====================================================================
-#                Copy run scripts to install dir
-# ====================================================================
-
-job_start "Copying run scripts to install dir"
-
-if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv32-unknown-elf-run ${INSTALL_DIR}/bin
-then
-    error "Failed to copy riscv32-unknown-elf-run"
-fi
-
-if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv64-unknown-elf-run ${INSTALL_DIR}/bin
-then
-    error "Failed to copy riscv64-unknown-elf-run"
-fi
-
-job_done
 
 # ====================================================================
 #                           Finished
