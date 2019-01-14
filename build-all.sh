@@ -7,7 +7,6 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 CLEAN_BUILD=no
 DEBUG_BUILD=no
-STACK_ERASE=no
 BUILD_DIR=${TOP}/build
 INSTALL_DIR=${TOP}/install
 
@@ -39,7 +38,6 @@ function usage () {
     echo "                        [--with-target <target>]"
     echo "                        [--with-arch <arch>]"
     echo "                        [--with-abi <abi>]"
-    echo "                        [--enable-default-stack-erase]"
     echo
     echo "--with-xlen:"
     echo "        Choose between 32 or 64.  Default is 32."
@@ -63,11 +61,6 @@ function usage () {
     echo "        will be extended with the 'd' or 'f' modifier if 'd' or"
     echo "        'f' is included in the --with-arch value.  The 'd' is"
     echo "        preferred over 'f' if both are present in the arch value"
-    echo ""
-    echo "--enable-default-stack-erase:"
-    echo "        Pass this if you'd like to build GCC and newlib such that"
-    echo "        stack erase is turned on by default, and crt0 verifies that"
-    echo "        the stack has been erased after main returns."
 
     exit 1
 }
@@ -138,11 +131,6 @@ case ${opt} in
         ABI_SPECIFIED=yes
 	;;
 
-    --enable-default-stack-erase)
-        shift
-        STACK_ERASE=yes
-        ;;
-
     ?*)
 	usage "Unknown argument $1"
 	;;
@@ -167,7 +155,7 @@ fi
 
 if [ "${ARCH_SPECIFIED}" == "no" ]
 then
-    WITH_ARCH=im
+    WITH_ARCH=imc
 else
     case ${WITH_ARCH} in
         rv32* | rv64*)
@@ -204,15 +192,6 @@ then
 fi
 
 WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
-
-if [ "${STACK_ERASE}" == "yes" ]
-then
-    GCC_STACK_ERASE=--enable-default-stack-erase
-    NEWLIB_STACK_ERASE=--enable-stack-erase
-else
-    GCC_STACK_ERASE=""
-    NEWLIB_STACK_ERASE=""
-fi
 
 # ====================================================================
 
@@ -302,6 +281,28 @@ fi
 source common.sh
 
 # ====================================================================
+#                    Locations of all the source
+# ====================================================================
+
+export BINUTILS_GDB_SOURCE_DIR=${TOP}/binutils-gdb
+export GCC_SOURCE_DIR=${TOP}/gcc
+export NEWLIB_SOURCE_DIR=${TOP}/newlib
+export QEMU_SOURCE_DIR=${TOP}/qemu
+export BEEBS_SOURCE_DIR=${TOP}/beebs
+
+# ====================================================================
+#                Log git versions into the build log
+# ====================================================================
+
+job_start "Writing git versions to log file"
+log_git_versions binutils-gdb "${BINUTILS_GDB_SOURCE_DIR}" \
+                 gcc "${GCC_SOURCE_DIR}" \
+                 newlib "${NEWLIB_SOURCE_DIR}" \
+                 qemu "${QEMU_SOURCE_DIR}" \
+                 beebs "${BEEBS_SOURCE_DIR}"
+job_done
+
+# ====================================================================
 #                   Build and install binutils and GDB
 # ====================================================================
 
@@ -309,7 +310,7 @@ job_start "Building binutils and GDB"
 
 mkdir_and_enter "${BINUTILS_BUILD_DIR}"
 
-if ! run_command ${TOP}/binutils-gdb/configure \
+if ! run_command ${BINUTILS_GDB_SOURCE_DIR}/configure \
          --prefix=${INSTALL_PREFIX_DIR} \
          --sysconfdir=${INSTALL_SYSCONF_DIR} \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
@@ -351,7 +352,7 @@ job_start "Building stage 1 GCC"
 
 mkdir_and_enter ${GCC_STAGE_1_BUILD_DIR}
 
-if ! run_command ${TOP}/gcc/configure \
+if ! run_command ${GCC_SOURCE_DIR}/configure \
            --prefix="${INSTALL_PREFIX_DIR}" \
            --sysconfdir="${INSTALL_SYSCONF_DIR}" \
            --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
@@ -387,8 +388,7 @@ if ! run_command ${TOP}/gcc/configure \
            --with-newlib \
            --disable-largefile \
            --disable-nls \
-           --enable-checking=yes \
-           ${GCC_STACK_ERASE}
+           --enable-checking=yes
 then
     error "Failed to configure GCC (stage 1)"
 fi
@@ -416,7 +416,7 @@ export PATH=${INSTALL_PREFIX_DIR}/bin:$PATH
 
 mkdir_and_enter "${NEWLIB_BUILD_DIR}"
 
-if ! run_command ${TOP}/newlib/configure \
+if ! run_command ${NEWLIB_SOURCE_DIR}/configure \
          --prefix=${INSTALL_PREFIX_DIR} \
          --sysconfdir=${INSTALL_SYSCONF_DIR} \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
@@ -431,8 +431,7 @@ if ! run_command ${TOP}/newlib/configure \
 	--enable-newlib-reent-small \
 	--disable-newlib-wide-orient \
 	--disable-newlib-io-float \
-	--enable-newlib-nano-formatted-io \
-         ${NEWLIB_STACK_ERASE}
+	--enable-newlib-nano-formatted-io
 then
     error "Failed to configure newlib"
 fi
@@ -457,7 +456,7 @@ job_start "Building stage 2 GCC"
 
 mkdir_and_enter ${GCC_STAGE_2_BUILD_DIR}
 
-if ! run_command ${TOP}/gcc/configure \
+if ! run_command ${GCC_SOURCE_DIR}/configure \
            --prefix="${INSTALL_PREFIX_DIR}" \
            --sysconfdir="${INSTALL_SYSCONF_DIR}" \
            --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
@@ -493,8 +492,7 @@ if ! run_command ${TOP}/gcc/configure \
            --disable-largefile \
            --disable-nls \
            --enable-checking=yes \
-           --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin \
-           ${GCC_STACK_ERASE}
+           --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin
 then
     error "Failed to configure GCC (stage 2)"
 fi
@@ -520,7 +518,7 @@ job_start "Building QEMU"
 
 mkdir_and_enter ${QEMU_BUILD_DIR}
 
-if ! run_command ${TOP}/qemu/configure \
+if ! run_command ${QEMU_SOURCE_DIR}/configure \
            --prefix=${INSTALL_DIR} \
            --target-list=riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user
 then

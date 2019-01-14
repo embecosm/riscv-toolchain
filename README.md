@@ -1,8 +1,10 @@
-Embecosm RISC-V Toolchain for Stack Erase
-=========================================
+Embecosm RISC-V Toolchain - code size comparison branch
+=======================================================
 
-This repository consists of scripts and related files for building and testing a
-RISC-V tool chain with stack erase.
+This repository consists of scripts and related files for comparing code size
+across RISC-V, ARM, and ARC.
+
+This is presently a work-in-progress.
 
 Obtaining sources
 -----------------
@@ -11,7 +13,7 @@ First clone this repository, then use the `clone-all.sh` script to clone all
 other sources alongside this repository:
 
 ```
-git clone -b stack-erase git@github.com:embecosm/riscv-toolchain.git
+git clone -b grm-compare-wip git@github.com:embecosm/riscv-toolchain.git
 cd riscv-toolchain
 ./clone-all.sh
 ```
@@ -19,16 +21,15 @@ cd riscv-toolchain
 Building
 --------
 
-To build the toolchain and ISA simulator, use
+To build the RISC-V toolchain and QEMU, use
 
 ```
 ./build-all.sh [--with-xlen <xlen>]
                [--with-arch <arch>]
                [--with-abi  <abi>]
-               [--enable-default-stack-erase]
 ```
 
-All arguments are optional, the defaults being to build a toolchain for `rv32im`
+All arguments are optional, the defaults being to build a toolchain for `rv32imc`
 with the `ilp32` ABI. Possible values are:
 
 |Parameter  | Value                                          |

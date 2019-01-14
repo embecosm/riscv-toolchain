@@ -132,3 +132,44 @@ function run_command ()
     return $?
 }
 
+function log_git_versions ()
+{
+    echo "" >> ${LOGFILE}
+    echo "Git Versions:" >> ${LOGFILE}
+    until test -z ${1:-}
+    do
+        name=$1
+        shift
+        dir=$1
+        shift
+
+        echo -n "  $name: " >> ${LOGFILE}
+
+        if test -d "${dir}"
+        then
+            pushd `pwd` &>/dev/null
+            cd $dir
+
+            sha=`git rev-parse HEAD 2>/dev/null`
+            if test $? -eq 0
+            then
+                echo -n "${sha}" >> ${LOGFILE}
+            else
+                echo -n "git rev-parse failed" >> ${LOGFILE}
+            fi
+
+            desc=`git describe --dirty --always 2>/dev/null`
+            if test $? -eq 0
+            then
+                echo "  ($desc)" >> ${LOGFILE}
+            else
+                echo "" >> ${LOGFILE}
+            fi
+
+            popd &>/dev/null
+        else
+            echo "No directory found" >> ${LOGFILE}
+        fi
+    done
+    echo "" >> ${LOGFILE}
+}
