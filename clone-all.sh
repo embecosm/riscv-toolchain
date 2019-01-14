@@ -35,7 +35,7 @@ cd ${topdir}
 # Toolchain
 git clone git://sourceware.org/git/binutils-gdb.git
 git clone https://gcc.gnu.org/git/gcc.git
-git clone git://sourceware.org/git/newlib.git
+git clone git://sourceware.org/git/newlib-cygwin.git newlib
 
 # Bristol / Embecosm Embedded Benchmark Suite (BEEBS)
 git clone -b size-report-wip git@github.com:embecosm/riscv-beebs.git beebs
