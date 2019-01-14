@@ -38,7 +38,7 @@ git clone https://gcc.gnu.org/git/gcc.git
 git clone git://sourceware.org/git/newlib-cygwin.git newlib
 
 # Bristol / Embecosm Embedded Benchmark Suite (BEEBS)
-git clone -b size-report-wip git@github.com:embecosm/riscv-beebs.git beebs
+git clone -b grm-size-wip git@github.com:embecosm/riscv-beebs.git beebs
 
 # Emulator
 git clone https://git.qemu.org/git/qemu.git
