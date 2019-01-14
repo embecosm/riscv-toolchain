@@ -30,15 +30,15 @@
 
 # Set the top level directory.
 topdir=$(cd $(dirname $0)/..;pwd)
-
-BASE_URL=git@github.com:embecosm
-
 cd ${topdir}
 
 # Toolchain
-git clone -b stack-erase ${BASE_URL}/riscv-binutils-gdb.git binutils-gdb
-git clone -b stack-erase ${BASE_URL}/riscv-gcc.git gcc
-git clone -b stack-erase ${BASE_URL}/riscv-newlib.git newlib
+git clone git://sourceware.org/git/binutils-gdb.git
+git clone https://gcc.gnu.org/git/gcc.git
+git clone git://sourceware.org/git/newlib.git
+
+# Bristol / Embecosm Embedded Benchmark Suite (BEEBS)
+git clone -b size-report-wip git@github.com:embecosm/riscv-beebs.git beebs
 
 # Emulator
-git clone -b stack-erase ${BASE_URL}/riscv-qemu.git qemu
+git clone https://git.qemu.org/git/qemu.git
