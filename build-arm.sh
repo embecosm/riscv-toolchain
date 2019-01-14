@@ -20,6 +20,7 @@ INSTALL_DIR=${TOP}/install-arm
 WITH_XLEN=
 WITH_ARCH=
 WITH_ABI=
+WITH_FPU=
 JOBS=
 LOAD=
 
@@ -40,7 +41,6 @@ function usage () {
     echo "                        [--with-target <target>]"
     echo "                        [--with-arch <arch>]"
     echo "                        [--with-abi <abi>]"
-    echo "                        [--enable-default-stack-erase]"
     echo
     echo "--with-xlen:"
     echo "        Choose between 32 or 64.  Default is 32."
@@ -55,8 +55,7 @@ function usage () {
     echo "        of --with-xlen."
     echo ""
     echo "--with-fpu:"
-    echo "        Can only be used with --with-xlen is 32, when it defaults."
-    echo "        to fpv4-sp-d16"
+    echo "        Can only be used with --with-xlen is 32."
     echo ""
     echo "--with-float:"
     echo "        Defaults to hard if --with-fpu is specified or if the value"
@@ -196,11 +195,12 @@ fi
 
 if [ "${WITH_XLEN}" = "32" ]
 then
-    if [ "${FPU_SPECIFIED}" = "no" ]
+    if [ "${FPU_SPECIFIED}" = "yes" ]
     then
-	WITH_FPU="fpv4-sp-d16"
+        WITH_FPU_STRING="--with-fpu=${WITH_FPU}"
+    else
+        WITH_FPU_STRING=""
     fi
-    WITH_FPU_STRING="--with-fpu=${WITH_FPU}"
 else
     if [ "${FPU_SPECIFIED}" = "yes" ]
     then
@@ -214,7 +214,7 @@ if [ "${FLOAT_SPECIFIED}" = "no" ]
 then
     case ${WITH_XLEN} in
 	32)
-	    if [ ${FPU_SPECIFIED} ]
+	    if [ ${FPU_SPECIFIED} = "yes" ]
 	    then
 		WITH_FLOAT="hard"
 	    else
@@ -322,6 +322,28 @@ fi
 source common.sh
 
 # ====================================================================
+#                    Locations of all the source
+# ====================================================================
+
+export BINUTILS_GDB_SOURCE_DIR=${TOP}/binutils-gdb
+export GCC_SOURCE_DIR=${TOP}/gcc
+export NEWLIB_SOURCE_DIR=${TOP}/newlib
+export QEMU_SOURCE_DIR=${TOP}/qemu
+export BEEBS_SOURCE_DIR=${TOP}/beebs
+
+# ====================================================================
+#                Log git versions into the build log
+# ====================================================================
+
+job_start "Writing git versions to log file"
+log_git_versions binutils-gdb "${BINUTILS_GDB_SOURCE_DIR}" \
+                 gcc "${GCC_SOURCE_DIR}" \
+                 newlib "${NEWLIB_SOURCE_DIR}" \
+                 qemu "${QEMU_SOURCE_DIR}" \
+                 beebs "${BEEBS_SOURCE_DIR}"
+job_done
+
+# ====================================================================
 #                   Build and install binutils and GDB
 # ====================================================================
 
@@ -329,7 +351,7 @@ job_start "Building binutils and GDB"
 
 mkdir_and_enter "${BINUTILS_BUILD_DIR}"
 
-if ! run_command ${TOP}/binutils-gdb/configure \
+if ! run_command ${BINUTILS_GDB_SOURCE_DIR}/configure \
          --prefix=${INSTALL_PREFIX_DIR} \
          --sysconfdir=${INSTALL_SYSCONF_DIR} \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
@@ -371,7 +393,7 @@ job_start "Building stage 1 GCC"
 
 mkdir_and_enter ${GCC_STAGE_1_BUILD_DIR}
 
-if ! run_command ${TOP}/gcc/configure \
+if ! run_command ${GCC_SOURCE_DIR}/configure \
            --prefix="${INSTALL_PREFIX_DIR}" \
            --sysconfdir="${INSTALL_SYSCONF_DIR}" \
            --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
@@ -437,7 +459,7 @@ export PATH=${INSTALL_PREFIX_DIR}/bin:$PATH
 
 mkdir_and_enter "${NEWLIB_BUILD_DIR}"
 
-if ! run_command ${TOP}/newlib/configure \
+if ! run_command ${NEWLIB_SOURCE_DIR}/configure \
          --prefix=${INSTALL_PREFIX_DIR} \
          --sysconfdir=${INSTALL_SYSCONF_DIR} \
          --localstatedir=${INSTALL_LOCALSTATE_DIR} \
@@ -477,7 +499,7 @@ job_start "Building stage 2 GCC"
 
 mkdir_and_enter ${GCC_STAGE_2_BUILD_DIR}
 
-if ! run_command ${TOP}/gcc/configure \
+if ! run_command ${GCC_SOURCE_DIR}/configure \
            --prefix="${INSTALL_PREFIX_DIR}" \
            --sysconfdir="${INSTALL_SYSCONF_DIR}" \
            --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
