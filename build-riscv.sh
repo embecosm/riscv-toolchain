@@ -7,8 +7,8 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
 CLEAN_BUILD=no
 DEBUG_BUILD=no
-BUILD_DIR=${TOP}/build
-INSTALL_DIR=${TOP}/install
+BUILD_DIR=${TOP}/build-riscv
+INSTALL_DIR=${TOP}/install-riscv
 
 # ====================================================================
 
