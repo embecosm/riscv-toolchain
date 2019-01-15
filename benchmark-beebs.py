@@ -12,7 +12,7 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 TOP_DIR = os.path.abspath(os.path.join(CURRENT_DIR, '..'))
 BEEBS_DIR = os.path.join(TOP_DIR, 'beebs')
 
-HOSTS = { 'riscv': 'riscv32-unknown-elf', 'arm': 'arm-none-eabi' }
+HOSTS = { 'riscv': 'riscv32-unknown-elf', 'arm': 'arm-none-eabi', 'arc': 'arc-elf32' }
 
 CONFIGS = {
  'baseline':

@@ -4,8 +4,6 @@ Embecosm RISC-V Toolchain - code size comparison branch
 This repository consists of scripts and related files for comparing code size
 across RISC-V, ARM, and ARC.
 
-This is presently a work-in-progress.
-
 Obtaining sources
 -----------------
 
@@ -26,6 +24,7 @@ To build the RISC-V and ARM toolchains, use:
 ```
 ./build-riscv.sh
 ./build-arm.sh
+./build-arc.sh
 ```
 
 There are arguments to these scripts, which can be viewed with the `--help`
@@ -81,6 +80,23 @@ beebs-nolibc-nolibgcc
 Total                 170703   5616  36111
 beebs-nolibc-nolibgcc-nolibm
 Total                 160078   5614  36087
+```
+
+And for the `build-arc` subdir:
+
+```
+0 graham@pepper 17:10:18 /data/graham/projects/xyz/build-arc
+$ for i in beebs-*; do { echo $i; tail -n 100 $i/testsuite/beebs.log | grep Total; } done;
+beebs-baseline
+Total                 390796  26176 6831950
+beebs-nocrt
+Total                 339975  11492 6831320
+beebs-nolibc
+Total                 321715   5636 6831080
+beebs-nolibc-nolibgcc
+Total                 190355   5636 6831080
+beebs-nolibc-nolibgcc-nolibm
+Total                 178299   5628 6831072
 ```
 
 These results are obtained with the following revisions:
