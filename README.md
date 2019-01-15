@@ -104,9 +104,9 @@ These results are obtained with the following revisions:
 ### BEEBS
 
 ```
-commit 79bf5bcc271f992638a797c08a9a070cf1531186
+commit 4e4365160246ba6c30e6cc97195179f32941de34
 Author: Graham Markall <graham.markall@embecosm.com>
-Date:   Mon Jan 14 22:27:56 2019 +0000
+Date:   Tue Jan 15 13:38:44 2019 +0000
 ```
 
 ### Binutils-GDB
@@ -136,7 +136,7 @@ Date:   Sun Jan 13 23:35:28 2019 +0100
 ### RISCV-Toolchain
 
 ```
-commit b41ef89c8a411c3b96ab063923f4b08d44e13b3a
+commit 1866c3702aa0a31291a02fb6f1abd1f5a131b64a
 Author: Graham Markall <graham.markall@embecosm.com>
-Date:   Tue Jan 15 00:42:44 2019 +0000
+Date:   Tue Jan 15 17:23:55 2019 +0000
 ```
