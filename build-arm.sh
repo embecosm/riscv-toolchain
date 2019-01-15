@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Build the ARM embedded tool chain from the same source as the RISC-V
-
 TOOLCHAIN_DIR=$(cd "`dirname \"$0\"`"; pwd)
 TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 
@@ -232,6 +230,10 @@ then
     WITH_MODE="thumb"
 fi
 
+TARGET_GCC_CONFIG_FLAGS="--with-cpu=${WITH_CPU} ${WITH_FPU_STRING} --with-float=${WITH_FLOAT} --with-mode=${WITH_MODE}"
+QEMU_TARGETS="arm-softmmu,arm-linux-user"
+QEMU_SCRIPTS="arm-none-eabi-run"
+
 # ====================================================================
 
 echo "               Top: ${TOP}"
@@ -344,216 +346,14 @@ log_git_versions binutils-gdb "${BINUTILS_GDB_SOURCE_DIR}" \
 job_done
 
 # ====================================================================
-#                   Build and install binutils and GDB
+#                            Build tools
 # ====================================================================
 
-job_start "Building binutils and GDB"
-
-mkdir_and_enter "${BINUTILS_BUILD_DIR}"
-
-if ! run_command ${BINUTILS_GDB_SOURCE_DIR}/configure \
-         --prefix=${INSTALL_PREFIX_DIR} \
-         --sysconfdir=${INSTALL_SYSCONF_DIR} \
-         --localstatedir=${INSTALL_LOCALSTATE_DIR} \
-         --disable-gtk-doc \
-         --disable-gtk-doc-html \
-         --disable-doc \
-         --disable-docs \
-         --disable-documentation \
-         --with-xmlto=no \
-         --with-fop=no \
-         --disable-multilib \
-         --target=${TARGET_TRIPLET} \
-         --with-sysroot=${SYSROOT_DIR} \
-         --enable-poison-system-directories \
-         --disable-tls \
-         --disable-sim
-then
-    error "Failed to configure binutils and GDB"
-fi
-
-if ! run_command make ${PARALLEL}
-then
-    error "Failed to build binutils and GDB"
-fi
-
-if ! run_command make ${PARALLEL} install
-then
-    error "Failed to install binutils and GDB"
-fi
-
-job_done
-
-
-# ====================================================================
-#                Build and Install GCC (Stage 1)
-# ====================================================================
-
-job_start "Building stage 1 GCC"
-
-mkdir_and_enter ${GCC_STAGE_1_BUILD_DIR}
-
-if ! run_command ${GCC_SOURCE_DIR}/configure \
-           --prefix="${INSTALL_PREFIX_DIR}" \
-           --sysconfdir="${INSTALL_SYSCONF_DIR}" \
-           --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
-           --disable-shared \
-           --disable-static \
-           --disable-gtk-doc \
-           --disable-gtk-doc-html \
-           --disable-doc \
-           --disable-docs \
-           --disable-documentation \
-           --with-xmlto=no \
-           --with-fop=no \
-           --target=${TARGET_TRIPLET} \
-           --with-sysroot=${SYSROOT_DIR} \
-           --disable-__cxa_atexit \
-           --with-gnu-ld \
-           --disable-libssp \
-           --disable-multilib \
-           --enable-target-optspace \
-           --disable-libsanitizer \
-           --disable-tls \
-           --disable-libmudflap \
-           --disable-threads \
-           --disable-libquadmath \
-           --disable-libgomp \
-           --without-isl \
-           --without-cloog \
-           --disable-decimal-float \
-           --with-cpu=${WITH_CPU} \
-           ${WITH_FPU_STRING} \
-           --with-float=${WITH_FLOAT} \
-           --with-mode=${WITH_MODE} \
-           --enable-languages=c \
-           --without-headers \
-           --with-newlib \
-           --disable-largefile \
-           --disable-nls \
-           --enable-checking=yes
-then
-    error "Failed to configure GCC (stage 1)"
-fi
-
-if ! run_command make ${PARALLEL} all-gcc
-then
-    error "Failed to build GCC (stage 1)"
-fi
-
-if ! run_command make ${PARALLEL} install-gcc
-then
-    error "Failed to install GCC (stage 1)"
-fi
-
-job_done
-
-# ====================================================================
-#                   Build and install newlib
-# ====================================================================
-
-job_start "Building newlib"
-
-# Add Binutils and GCC to path to build newlib
-export PATH=${INSTALL_PREFIX_DIR}/bin:$PATH
-
-mkdir_and_enter "${NEWLIB_BUILD_DIR}"
-
-if ! run_command ${NEWLIB_SOURCE_DIR}/configure \
-         --prefix=${INSTALL_PREFIX_DIR} \
-         --sysconfdir=${INSTALL_SYSCONF_DIR} \
-         --localstatedir=${INSTALL_LOCALSTATE_DIR} \
-         --target=${TARGET_TRIPLET} \
-         --with-sysroot=${SYSROOT_DIR} \
-	--disable-newlib-fvwrite-in-streamio \
-	--disable-newlib-fseek-optimization \
-	--enable-newlib-nano-malloc \
-	--disable-newlib-unbuf-stream-opt \
-	--enable-target-optspace \
-	--enable-newlib-reent-small \
-	--disable-newlib-wide-orient \
-	--disable-newlib-io-float \
-	--enable-newlib-nano-formatted-io \
-	 CFLAGS_FOR_TARGET="-DPREFER_SIZE_OVER_SPEED=1 -Os"
-then
-    error "Failed to configure newlib"
-fi
-
-if ! run_command make ${PARALLEL}
-then
-    error "Failed to build newlib"
-fi
-
-if ! run_command make ${PARALLEL} install
-then
-    error "Failed to install newlib"
-fi
-
-job_done
-
-# ====================================================================
-#                Build and Install GCC (Stage 2)
-# ====================================================================
-
-job_start "Building stage 2 GCC"
-
-mkdir_and_enter ${GCC_STAGE_2_BUILD_DIR}
-
-if ! run_command ${GCC_SOURCE_DIR}/configure \
-           --prefix="${INSTALL_PREFIX_DIR}" \
-           --sysconfdir="${INSTALL_SYSCONF_DIR}" \
-           --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
-           --disable-shared \
-           --enable-static \
-           --disable-gtk-doc \
-           --disable-gtk-doc-html \
-           --disable-doc \
-           --disable-docs \
-           --disable-documentation \
-           --with-xmlto=no \
-           --with-fop=no \
-           --target=${TARGET_TRIPLET} \
-           --with-sysroot=${SYSROOT_DIR} \
-           --disable-__cxa_atexit \
-           --with-gnu-ld \
-           --disable-libssp \
-           --disable-multilib \
-           --enable-target-optspace \
-           --disable-libsanitizer \
-           --disable-tls \
-           --disable-libmudflap \
-           --disable-threads \
-           --disable-libquadmath \
-           --disable-libgomp \
-           --without-isl \
-           --without-cloog \
-           --disable-decimal-float \
-           --with-cpu=${WITH_CPU} \
-           ${WITH_FPU_STRING} \
-           --with-float=${WITH_FLOAT} \
-           --with-mode=${WITH_MODE} \
-           --enable-languages=c,c++ \
-           --with-newlib \
-           --disable-largefile \
-           --disable-nls \
-           --enable-checking=yes \
-           --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin
-then
-    error "Failed to configure GCC (stage 2)"
-fi
-
-if ! run_command make ${PARALLEL} all
-then
-    error "Failed to build GCC (stage 2)"
-fi
-
-if ! run_command make ${PARALLEL} install
-then
-    error "Failed to install GCC (stage 2)"
-fi
-
-job_done
-
+build_binutils_gdb
+build_gcc_stage_1
+build_newlib
+build_gcc_stage_2
+build_qemu
 
 # ====================================================================
 #                           Finished

@@ -193,6 +193,10 @@ fi
 
 WITH_ARCH=rv${WITH_XLEN}${WITH_ARCH}
 
+TARGET_GCC_CONFIG_FLAGS="--with-arch=${WITH_ARCH} --with-abi=${WITH_ABI}"
+QEMU_TARGETS="riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user"
+QEMU_SCRIPTS="riscv32-unknown-elf-run riscv64-unknown-elf-run"
+
 # ====================================================================
 
 echo "               Top: ${TOP}"
@@ -301,6 +305,10 @@ log_git_versions binutils-gdb "${BINUTILS_GDB_SOURCE_DIR}" \
                  qemu "${QEMU_SOURCE_DIR}" \
                  beebs "${BEEBS_SOURCE_DIR}"
 job_done
+
+# ====================================================================
+#                            Build tools
+# ====================================================================
 
 build_binutils_gdb
 build_gcc_stage_1

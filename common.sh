@@ -257,8 +257,7 @@ function build_gcc_stage_1 ()
                --without-isl \
                --without-cloog \
                --disable-decimal-float \
-               --with-arch=${WITH_ARCH} \
-               --with-abi=${WITH_ABI} \
+               ${TARGET_GCC_CONFIG_FLAGS} \
                --enable-languages=c \
                --without-headers \
                --with-newlib \
@@ -367,8 +366,7 @@ function build_gcc_stage_2 ()
                --without-isl \
                --without-cloog \
                --disable-decimal-float \
-               --with-arch=${WITH_ARCH} \
-               --with-abi=${WITH_ABI} \
+               ${TARGET_GCC_CONFIG_FLAGS} \
                --enable-languages=c,c++ \
                --with-newlib \
                --disable-largefile \
@@ -404,7 +402,7 @@ function build_qemu ()
 
     if ! run_command ${QEMU_SOURCE_DIR}/configure \
                --prefix=${INSTALL_DIR} \
-               --target-list=riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user
+               --target-list=${QEMU_TARGETS}
     then
         error "Failed to configure QEMU"
     fi
@@ -427,15 +425,13 @@ function build_qemu ()
 
     job_start "Copying run scripts to install dir"
 
-    if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv32-unknown-elf-run ${INSTALL_DIR}/bin
-    then
-        error "Failed to copy riscv32-unknown-elf-run"
-    fi
-
-    if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv64-unknown-elf-run ${INSTALL_DIR}/bin
-    then
-        error "Failed to copy riscv64-unknown-elf-run"
-    fi
+    for i in ${QEMU_SCRIPTS}
+    do
+        if ! run_command cp ${TOOLCHAIN_DIR}/scripts/${i} ${INSTALL_DIR}/bin
+        then
+            error "Failed to copy ${i}"
+        fi
+    done
 
     job_done
 }
