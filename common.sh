@@ -8,7 +8,7 @@ if [ "x${SCRIPT_START_TIME}" == "x" ]; then
     echo "SCRIPT_START_TIME unset"
     exit 1
 fi
-    
+
 function msg ()
 {
     echo "$1" | tee -a ${LOGFILE}
@@ -173,3 +173,270 @@ function log_git_versions ()
     done
     echo "" >> ${LOGFILE}
 }
+
+# ====================================================================
+#                   Build and install binutils and GDB
+# ====================================================================
+
+function build_binutils_gdb ()
+{
+    job_start "Building binutils and GDB"
+
+    mkdir_and_enter "${BINUTILS_BUILD_DIR}"
+
+    if ! run_command ${BINUTILS_GDB_SOURCE_DIR}/configure \
+             --prefix=${INSTALL_PREFIX_DIR} \
+             --sysconfdir=${INSTALL_SYSCONF_DIR} \
+             --localstatedir=${INSTALL_LOCALSTATE_DIR} \
+             --disable-gtk-doc \
+             --disable-gtk-doc-html \
+             --disable-doc \
+             --disable-docs \
+             --disable-documentation \
+             --with-xmlto=no \
+             --with-fop=no \
+             --disable-multilib \
+             --target=${TARGET_TRIPLET} \
+             --with-sysroot=${SYSROOT_DIR} \
+             --enable-poison-system-directories \
+             --disable-tls \
+             --disable-sim
+    then
+        error "Failed to configure binutils and GDB"
+    fi
+
+    if ! run_command make ${PARALLEL}
+    then
+        error "Failed to build binutils and GDB"
+    fi
+
+    if ! run_command make ${PARALLEL} install
+    then
+        error "Failed to install binutils and GDB"
+    fi
+
+    job_done
+}
+
+# ====================================================================
+#                Build and Install GCC (Stage 1)
+# ====================================================================
+
+function build_gcc_stage_1 ()
+{
+    job_start "Building stage 1 GCC"
+
+    mkdir_and_enter ${GCC_STAGE_1_BUILD_DIR}
+
+    if ! run_command ${GCC_SOURCE_DIR}/configure \
+               --prefix="${INSTALL_PREFIX_DIR}" \
+               --sysconfdir="${INSTALL_SYSCONF_DIR}" \
+               --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
+               --disable-shared \
+               --disable-static \
+               --disable-gtk-doc \
+               --disable-gtk-doc-html \
+               --disable-doc \
+               --disable-docs \
+               --disable-documentation \
+               --with-xmlto=no \
+               --with-fop=no \
+               --target=${TARGET_TRIPLET} \
+               --with-sysroot=${SYSROOT_DIR} \
+               --disable-__cxa_atexit \
+               --with-gnu-ld \
+               --disable-libssp \
+               --disable-multilib \
+               --enable-target-optspace \
+               --disable-libsanitizer \
+               --disable-tls \
+               --disable-libmudflap \
+               --disable-threads \
+               --disable-libquadmath \
+               --disable-libgomp \
+               --without-isl \
+               --without-cloog \
+               --disable-decimal-float \
+               --with-arch=${WITH_ARCH} \
+               --with-abi=${WITH_ABI} \
+               --enable-languages=c \
+               --without-headers \
+               --with-newlib \
+               --disable-largefile \
+               --disable-nls \
+               --enable-checking=yes
+    then
+        error "Failed to configure GCC (stage 1)"
+    fi
+
+    if ! run_command make ${PARALLEL} all-gcc
+    then
+        error "Failed to build GCC (stage 1)"
+    fi
+
+    if ! run_command make ${PARALLEL} install-gcc
+    then
+        error "Failed to install GCC (stage 1)"
+    fi
+
+    job_done
+}
+
+# ====================================================================
+#                   Build and install newlib
+# ====================================================================
+
+function build_newlib ()
+{
+    job_start "Building newlib"
+
+    # Add Binutils and GCC to path to build newlib
+    export PATH=${INSTALL_PREFIX_DIR}/bin:$PATH
+
+    mkdir_and_enter "${NEWLIB_BUILD_DIR}"
+
+    if ! run_command ${NEWLIB_SOURCE_DIR}/configure \
+             --prefix=${INSTALL_PREFIX_DIR} \
+             --sysconfdir=${INSTALL_SYSCONF_DIR} \
+             --localstatedir=${INSTALL_LOCALSTATE_DIR} \
+             --target=${TARGET_TRIPLET} \
+             --with-sysroot=${SYSROOT_DIR} \
+             CFLAGS_FOR_TARGET="-DPREFER_SIZE_OVER_SPEED=1 -Os" \
+            --disable-newlib-fvwrite-in-streamio \
+            --disable-newlib-fseek-optimization \
+            --enable-newlib-nano-malloc \
+            --disable-newlib-unbuf-stream-opt \
+            --enable-target-optspace \
+            --enable-newlib-reent-small \
+            --disable-newlib-wide-orient \
+            --disable-newlib-io-float \
+            --enable-newlib-nano-formatted-io
+    then
+        error "Failed to configure newlib"
+    fi
+
+    if ! run_command make ${PARALLEL}
+    then
+        error "Failed to build newlib"
+    fi
+
+    if ! run_command make ${PARALLEL} install
+    then
+        error "Failed to install newlib"
+    fi
+
+    job_done
+}
+
+# ====================================================================
+#                Build and Install GCC (Stage 2)
+# ====================================================================
+
+function build_gcc_stage_2 ()
+{
+    job_start "Building stage 2 GCC"
+
+    mkdir_and_enter ${GCC_STAGE_2_BUILD_DIR}
+
+    if ! run_command ${GCC_SOURCE_DIR}/configure \
+               --prefix="${INSTALL_PREFIX_DIR}" \
+               --sysconfdir="${INSTALL_SYSCONF_DIR}" \
+               --localstatedir="${INSTALL_LOCALSTATE_DIR}" \
+               --disable-shared \
+               --enable-static \
+               --disable-gtk-doc \
+               --disable-gtk-doc-html \
+               --disable-doc \
+               --disable-docs \
+               --disable-documentation \
+               --with-xmlto=no \
+               --with-fop=no \
+               --target=${TARGET_TRIPLET} \
+               --with-sysroot=${SYSROOT_DIR} \
+               --disable-__cxa_atexit \
+               --with-gnu-ld \
+               --disable-libssp \
+               --disable-multilib \
+               --enable-target-optspace \
+               --disable-libsanitizer \
+               --disable-tls \
+               --disable-libmudflap \
+               --disable-threads \
+               --disable-libquadmath \
+               --disable-libgomp \
+               --without-isl \
+               --without-cloog \
+               --disable-decimal-float \
+               --with-arch=${WITH_ARCH} \
+               --with-abi=${WITH_ABI} \
+               --enable-languages=c,c++ \
+               --with-newlib \
+               --disable-largefile \
+               --disable-nls \
+               --enable-checking=yes \
+               --with-build-time-tools=${INSTALL_PREFIX_DIR}/${TARGET_TRIPLET}/bin
+    then
+        error "Failed to configure GCC (stage 2)"
+    fi
+
+    if ! run_command make ${PARALLEL} all
+    then
+        error "Failed to build GCC (stage 2)"
+    fi
+
+    if ! run_command make ${PARALLEL} install
+    then
+        error "Failed to install GCC (stage 2)"
+    fi
+
+    job_done
+}
+
+# ====================================================================
+#                      Build and Install QEMU
+# ====================================================================
+
+function build_qemu ()
+{
+    job_start "Building QEMU"
+
+    mkdir_and_enter ${QEMU_BUILD_DIR}
+
+    if ! run_command ${QEMU_SOURCE_DIR}/configure \
+               --prefix=${INSTALL_DIR} \
+               --target-list=riscv64-softmmu,riscv32-softmmu,riscv64-linux-user,riscv32-linux-user
+    then
+        error "Failed to configure QEMU"
+    fi
+
+    if ! run_command make
+    then
+        error "Failed to build QEMU"
+    fi
+
+    if ! run_command make install
+    then
+        error "Failed to install QEMU"
+    fi
+
+    job_done
+
+    # ====================================================================
+    #                Copy run scripts to install dir
+    # ====================================================================
+
+    job_start "Copying run scripts to install dir"
+
+    if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv32-unknown-elf-run ${INSTALL_DIR}/bin
+    then
+        error "Failed to copy riscv32-unknown-elf-run"
+    fi
+
+    if ! run_command cp ${TOOLCHAIN_DIR}/scripts/riscv64-unknown-elf-run ${INSTALL_DIR}/bin
+    then
+        error "Failed to copy riscv64-unknown-elf-run"
+    fi
+
+    job_done
+}
+
