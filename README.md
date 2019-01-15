@@ -21,34 +21,106 @@ cd riscv-toolchain
 Building
 --------
 
-To build the RISC-V toolchain and QEMU, use
+To build the RISC-V and ARM toolchains, use:
 
 ```
-./build-all.sh [--with-xlen <xlen>]
-               [--with-arch <arch>]
-               [--with-abi  <abi>]
+./build-riscv.sh
+./build-arm.sh
 ```
 
-All arguments are optional, the defaults being to build a toolchain for `rv32imc`
-with the `ilp32` ABI. Possible values are:
+There are arguments to these scripts, which can be viewed with the `--help`
+option, but the default options are all appropriate for reproducing results
+published from this repository.
 
-|Parameter  | Value                                          |
-|-----------|------------------------------------------------|
-| `xlen`    | `32` or `64`                                   |
-| `arch`    | ISA and extensions, e.g. `i`, `im`, `gc`, etc. |
-| `abi`     | `ilp32`, `lp64`, etc.                          |
+Benchmarking
+------------
 
-Passing the argument `--enable-default-stack-erase` will result in a toolchain
-where stack erase is on by default.
-
-Executing the GCC tests
------------------------
-
-To run tests:
+Once the toolchains are built, the benchmarks can be run, with:
 
 ```
-./run-tests.sh [--tool <tool>]
+./benchmark-beebs.py
 ```
 
-The default tool is `gcc` - however the `g++` and `libstdc++` tests can also be
-run by specifying the `--tool` argument.
+Results
+-------
+
+Presentation of results is a work-in-progress at present. In general the results
+for each platform and configuration are held in the `testsuite/` subdir of each
+BEEBS build.
+
+To get a quick summary overview, one can run the following command (and see
+similar output in the `build-riscv` subdir:
+
+```
+0 graham@pepper 00:34:45 /data/graham/projects/xyz/build-riscv
+$ for i in beebs-*; do { echo $i; tail -n 100 $i/testsuite/beebs.log | grep Total; } done;
+beebs-baseline
+Total                 407681  27100  38510
+beebs-nocrt
+Total                 335661  12347  36287
+beebs-nolibc
+Total                 309762   6487  36119
+beebs-nolibc-nolibgcc
+Total                 193949   6487  36119
+beebs-nolibc-nolibgcc-nolibm
+Total                 182427   5863  36095
+```
+
+Similarly in the `build-arm` subdir:
+
+```
+0 graham@pepper 00:35:08 /data/graham/projects/xyz/build-arm
+$ for i in beebs-*; do { echo $i; tail -n 100 $i/testsuite/beebs.log | grep Total; } done;
+beebs-baseline
+Total                 543278  47032  53064
+beebs-nocrt
+Total                 278586  11487  39375
+beebs-nolibc
+Total                 212825   5616  36111
+beebs-nolibc-nolibgcc
+Total                 170703   5616  36111
+beebs-nolibc-nolibgcc-nolibm
+Total                 160078   5614  36087
+```
+
+These results are obtained with the following revisions:
+
+### BEEBS
+
+```
+commit 79bf5bcc271f992638a797c08a9a070cf1531186
+Author: Graham Markall <graham.markall@embecosm.com>
+Date:   Mon Jan 14 22:27:56 2019 +0000
+```
+
+### Binutils-GDB
+
+```
+commit d63f2be21bfbedb8a83b5c5f317896bf2bb19a95
+Author: Rainer Orth <ro@CeBiTec.Uni-Bielefeld.DE>
+Date:   Mon Jan 14 15:47:35 2019 +0100
+```
+
+### GCC
+
+```
+commit 0764f7c0c7ccc343793a21026eca1cd15af7e87c
+Author: rguenth <rguenth@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date:   Mon Jan 14 13:11:43 2019 +0000
+```
+
+### Newlib
+
+```
+commit 19b7c7ab2e2fdfb70722bb016e67229c7184a173
+Author: Corinna Vinschen <corinna@vinschen.de>
+Date:   Sun Jan 13 23:35:28 2019 +0100
+```
+
+### RISCV-Toolchain
+
+```
+commit b41ef89c8a411c3b96ab063923f4b08d44e13b3a
+Author: Graham Markall <graham.markall@embecosm.com>
+Date:   Tue Jan 15 00:42:44 2019 +0000
+```
