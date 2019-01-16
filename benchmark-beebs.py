@@ -14,19 +14,7 @@ BEEBS_DIR = os.path.join(TOP_DIR, 'beebs')
 
 HOSTS = { 'riscv': 'riscv32-unknown-elf', 'arm': 'arm-none-eabi', 'arc': 'arc-elf32' }
 
-CONFIGS = {
- 'baseline':
-     '--with-chip=compare-baseline --with-board=generic',
- 'nocrt':
-     '--with-chip=compare-nocrt --with-board=generic --enable-dummy-crt0',
- 'nolibc':
-     '--with-chip=compare-nolibc --with-board=generic --enable-dummy-crt0 --enable-dummy-libc',
- 'nolibc-nolibgcc':
-     '--with-chip=compare-nolibc-nolibgcc --with-board=generic --enable-dummy-crt0 --enable-dummy-libc --enable-dummy-libgcc',
- 'nolibc-nolibgcc-nolibm':
-     '--with-chip=compare-nolibc-nolibgcc --with-board=generic --enable-dummy-crt0 --enable-dummy-libc --enable-dummy-libgcc --enable-dummy-libm'
-}
-
+CONFIGS = [ 'baseline', 'nocrt', 'nolibc', 'nolibc-nolibgcc', 'nolibc-nolibgcc-nolibm' ]
 
 log = logging.getLogger()
 
@@ -81,7 +69,9 @@ def build(host, config):
     toolchain_dir = os.path.join(TOP_DIR, 'install-%s' % host, 'bin')
     try:
         log.info('Configuring...')
-        config_args = [ configure, host_arg ] + CONFIGS[config].split() + [ '--disable-maintainer-mode' ]
+        chip_arg = '--with-chip=compare-%s' % config
+        board_arg = '--with-board=generic'
+        config_args = [ configure, host_arg, chip_arg, board_arg ]
         run_command(config_args, timeout=30, work_dir=build_dir, toolchain_dir=toolchain_dir)
         log.info('Building...')
         run_command(['make', '-j9'], timeout=120, work_dir=build_dir, toolchain_dir=toolchain_dir)
