@@ -31,25 +31,30 @@ class RunCommandError(RuntimeError):
     '''Exception raised when something went wrong with execution of command.'''
     pass
 
+
+# This version comment out capture_output arg to subprocess.run (not supported
+# in older releases of Python) and associated calls to decode().
+
 def run_command(args, *, timeout, work_dir, toolchain_dir):
     log.debug('Running %s' % " ".join(args))
     path = toolchain_dir + os.pathsep + os.environ['PATH']
     env = { 'PATH': path }
     try:
-        cp = subprocess.run(args, capture_output=True, check=True, timeout=timeout, cwd=work_dir, env=env)
+        cp = subprocess.run(args, check=True, timeout=timeout, cwd=work_dir, env=env)
+#        cp = subprocess.run(args, capture_output=True, check=True, timeout=timeout, cwd=work_dir, env=env)
         log.info('Process exited normally')
-        log.debug('Stdout:\n\n%s\n\n' % cp.stdout.decode())
-        log.debug('Stderr:\n\n%s\n\n' % cp.stderr.decode())
+#        log.debug('Stdout:\n\n%s\n\n' % cp.stdout.decode())
+#        log.debug('Stderr:\n\n%s\n\n' % cp.stderr.decode())
         return
     except subprocess.TimeoutExpired as e:
         log.info('Execution timeout (%ss) expired') % timeout
-        log.info('Stdout:\n\n%s\n\n' % e.stdout.decode())
-        log.info('Stderr:\n\n%s\n\n' % e.stderr.decode())
+#        log.info('Stdout:\n\n%s\n\n' % e.stdout.decode())
+#        log.info('Stderr:\n\n%s\n\n' % e.stderr.decode())
         raise RunCommandError
     except subprocess.CalledProcessError as e:
         log.info('Process exited abnormally with code %s' % e.returncode)
-        log.info('Stdout:\n\n%s\n\n' % e.stdout.decode())
-        log.info('Stderr:\n\n%s\n\n' % e.stderr.decode())
+#        log.info('Stdout:\n\n%s\n\n' % e.stdout.decode())
+#        log.info('Stderr:\n\n%s\n\n' % e.stderr.decode())
         raise RunCommandError
 
 def build(host, config):
