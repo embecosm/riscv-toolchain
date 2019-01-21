@@ -36,7 +36,8 @@ def run_command(args, *, timeout, work_dir, toolchain_dir):
     path = toolchain_dir + os.pathsep + os.environ['PATH']
     env = { 'PATH': path }
     try:
-        cp = subprocess.run(args, capture_output=True, check=True, timeout=timeout, cwd=work_dir, env=env)
+        pipe = subprocess.PIPE
+        cp = subprocess.run(args, stdout=pipe, stderr=pipe, check=True, timeout=timeout, cwd=work_dir, env=env)
         log.info('Process exited normally')
         log.debug('Stdout:\n\n%s\n\n' % cp.stdout.decode())
         log.debug('Stderr:\n\n%s\n\n' % cp.stderr.decode())
