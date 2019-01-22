@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import datetime
 import itertools
 import logging
@@ -82,12 +83,34 @@ def build(host, config):
         log.info('Aborting due to error in command execution.')
         raise
 
-def main():
+def validate_targets(targets):
+    for t in targets:
+        if t not in HOSTS:
+            log.error('Target %s does not exist.' % t)
+            raise ValueError
+
+def validate_configs(configs):
+    for c in configs:
+        if c not in CONFIGS:
+            log.error('Config %s does not exist.' % c)
+            raise ValueError
+
+def main(targets, configs):
     log_name = 'benchmark-beebs-%s.log' % datetime.datetime.now().strftime('%Y-%m-%d-%H%M')
     log_path = os.path.join(TOP_DIR, 'logs', log_name)
     setup_logging(log_path)
 
     log.info('Top dir: %s', TOP_DIR)
+
+    try:
+        validate_targets(targets)
+        validate_configs(configs)
+    except ValueError:
+        return 1
+
+    log.info('Running for targets: %s' % ", ".join(targets))
+    log.info('Running configurations: %s' % ", ".join(configs))
+
     for host, config in itertools.product(HOSTS, CONFIGS):
         log.info('\nBuilding %s on %s' % (config, host))
         try:
@@ -97,5 +120,31 @@ def main():
 
     return 0
 
+DESCRIPTION="""\
+Run BEEBS Benchmarks for a given set of configurations on a given set of
+architectures. The default is to run all configurations on all architectures.
+
+Available configurations are:
+
+    %s
+
+Available architectures are:
+
+    %s""" % (" ".join(CONFIGS), " ".join(HOSTS))
+
+def parse_args():
+
+    parser = argparse.ArgumentParser(description=DESCRIPTION,
+        formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--arches', nargs='+', metavar='ARCH',
+        help='Target architectures')
+    parser.add_argument('--configs', nargs='+', metavar='CONFIG',
+        help='Configurations')
+    args = parser.parse_args()
+    targets = args.arches or HOSTS
+    configs = args.configs or CONFIGS
+    return targets, configs
+
 if __name__ == '__main__':
-    sys.exit(main())
+    targets, configs = parse_args()
+    sys.exit(main(targets, configs))
