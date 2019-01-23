@@ -111,7 +111,7 @@ def main(targets, configs):
     log.info('Running for targets: %s' % ", ".join(targets))
     log.info('Running configurations: %s' % ", ".join(configs))
 
-    for host, config in itertools.product(HOSTS, CONFIGS):
+    for host, config in itertools.product(targets, configs):
         log.info('\nBuilding %s on %s' % (config, host))
         try:
             build(host, config)
