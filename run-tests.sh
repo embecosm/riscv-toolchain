@@ -13,9 +13,9 @@ TOP=$(cd ${TOOLCHAIN_DIR}/..; pwd)
 # ====================================================================
 
 WITH_TARGET=riscv32-unknown-elf
-BUILD_DIR=${TOP}/build
+BUILD_DIR=${TOP}/build-riscv
 RESULTS_DIR=${TOP}/logs
-INSTALL_DIR=${TOP}/install
+INSTALL_DIR=${TOP}/install-riscv
 TARGET_BOARD=riscv-sim
 TARGET_SUBSET=
 TOOL=gcc
