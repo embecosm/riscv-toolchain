@@ -1,2 +1,4 @@
 # Editor backup files
 *~
+*.csv
+graph-*.svg
