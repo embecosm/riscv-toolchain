@@ -17,6 +17,10 @@ HOSTS = { 'riscv': 'riscv32-unknown-elf', 'arm': 'arm-none-eabi', 'arc': 'arc-el
 
 CONFIGS = [ 'baseline', 'nocrt', 'nolibc', 'nolibc-nolibgcc', 'nolibc-nolibgcc-nolibm' ]
 
+# These get filled in during argument parsing.
+BUILD_DIRS = {}
+INSTALL_DIRS = {}
+
 log = logging.getLogger()
 
 def setup_logging(logfile):
@@ -55,7 +59,7 @@ def run_command(args, *, timeout, work_dir, toolchain_dir):
         raise RunCommandError
 
 def build(host, config):
-    build_dir = os.path.join(TOP_DIR, 'build-%s' % host, 'beebs-%s' % config)
+    build_dir = os.path.join(BUILD_DIRS[host], 'beebs-%s' % config)
     log.info('Building in %s' % build_dir)
     if os.path.exists(build_dir):
         if os.path.isdir(build_dir):
@@ -68,7 +72,7 @@ def build(host, config):
         log.info('Using existing build dir')
     configure = os.path.join(BEEBS_DIR, 'configure')
     host_arg = '--host=%s' % HOSTS[host]
-    toolchain_dir = os.path.join(TOP_DIR, 'install-%s' % host, 'bin')
+    toolchain_dir = os.path.join(INSTALL_DIRS[host], 'bin')
     try:
         log.info('Configuring...')
         chip_arg = '--with-chip=compare-%s' % config
@@ -140,9 +144,26 @@ def parse_args():
         help='Target architectures')
     parser.add_argument('--configs', nargs='+', metavar='CONFIG',
         help='Configurations')
-    args = parser.parse_args()
-    targets = args.arches or HOSTS
-    configs = args.configs or CONFIGS
+    for host in HOSTS:
+        parser.add_argument('--%s-build-dir' % host, metavar='BUILD-DIR',
+                            help='Directory in which %s was built' % host)
+        parser.add_argument('--%s-install-dir' % host, metavar='INSTALL-DIR',
+                            help='Directory in which %s was built' % host)
+
+    args = vars (parser.parse_args())
+    targets = args['arches'] or HOSTS
+    configs = args['configs'] or CONFIGS
+
+    for host in HOSTS:
+        if (args['%s_build_dir' % host]):
+            BUILD_DIRS[host] = args['%s_build_dir' % host]
+        else:
+            BUILD_DIRS[host] = os.path.join(TOP_DIR, 'build-%s' % host)
+        if (args['%s_install_dir' % host]):
+            INSTALL_DIRS[host] = args['%s_install_dir' % host]
+        else:
+            INSTALL_DIRS[host] = os.path.join(TOP_DIR, 'install-%s' % host)
+
     return targets, configs
 
 if __name__ == '__main__':
