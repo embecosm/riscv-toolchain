@@ -21,8 +21,6 @@ TARGET_SUBSET=
 TOOL=gcc
 COMMENT="none"
 
-GCC_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
-
 # Default parallellism
 processor_count="`(echo processor; cat /proc/cpuinfo 2>/dev/null echo processor) \
            | grep -c processor`"
@@ -126,6 +124,7 @@ rm -f ${RESULTS_DIR}/*
 # ====================================================================
 
 GDB_BUILD_DIR=${BUILD_DIR}/gdb
+GCC_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 
 # ====================================================================
 
