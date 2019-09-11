@@ -1,3 +1,9 @@
 #!/bin/bash
 
-qemu-riscv64 "$@"
+if readelf -h $1 | grep 'Class:\s*ELF32$'
+then
+  qemu-riscv32 "$@"
+else
+  qemu-riscv64 "$@"
+fi
+

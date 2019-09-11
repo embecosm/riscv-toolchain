@@ -1,3 +1,1 @@
-#!/bin/bash
-
-qemu-riscv32 "$@"
+riscv64-unknown-elf-run
