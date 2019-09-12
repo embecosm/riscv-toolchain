@@ -195,7 +195,7 @@ function build_binutils_gdb ()
              --disable-documentation \
              --with-xmlto=no \
              --with-fop=no \
-             --disable-multilib \
+             ${MULTILIB_BUILD} \
              --target=${TARGET_TRIPLET} \
              --with-sysroot=${SYSROOT_DIR} \
              --enable-poison-system-directories \
@@ -246,7 +246,7 @@ function build_gcc_stage_1 ()
                --disable-__cxa_atexit \
                --with-gnu-ld \
                --disable-libssp \
-               --disable-multilib \
+               ${MULTILIB_BUILD} \
                --enable-target-optspace \
                --disable-libsanitizer \
                --disable-tls \
@@ -355,7 +355,7 @@ function build_gcc_stage_2 ()
                --disable-__cxa_atexit \
                --with-gnu-ld \
                --disable-libssp \
-               --disable-multilib \
+               ${MULTILIB_BUILD} \
                --enable-target-optspace \
                --disable-libsanitizer \
                --disable-tls \

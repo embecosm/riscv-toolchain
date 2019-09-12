@@ -9,6 +9,7 @@ CLEAN_BUILD=no
 DEBUG_BUILD=no
 BUILD_DIR=${TOP}/build-riscv
 INSTALL_DIR=${TOP}/install-riscv
+MULTILIB_BUILD='--disable-multilib'
 
 # ====================================================================
 
@@ -105,6 +106,10 @@ case ${opt} in
 
     --debug)
 	DEBUG_BUILD=yes
+	;;
+
+    --multilib)
+	MULTILIB_BUILD='--enable-multilib'
 	;;
 
     --with-xlen)
