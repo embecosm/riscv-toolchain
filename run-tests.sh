@@ -123,7 +123,7 @@ rm -f ${RESULTS_DIR}/*
 
 # ====================================================================
 
-GDB_BUILD_DIR=${BUILD_DIR}/gdb
+GDB_BUILD_DIR=${BUILD_DIR}/binutils-gdb
 GCC_BUILD_DIR=${BUILD_DIR}/gcc-stage-2
 
 # ====================================================================
