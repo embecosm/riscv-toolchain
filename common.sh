@@ -199,8 +199,7 @@ function build_binutils_gdb ()
              --target=${TARGET_TRIPLET} \
              --with-sysroot=${SYSROOT_DIR} \
              --enable-poison-system-directories \
-             --disable-tls \
-             --disable-sim
+             --disable-tls
     then
         error "Failed to configure binutils and GDB"
     fi
